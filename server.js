@@ -8,12 +8,20 @@ const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const { google } = require("googleapis");
 const stream = require('stream');
+const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const SUPABASE_URL = "https://jakurlvpoztwzsgpukja.supabase.co";
-const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impha3VybHZwb3p0d3pzZ3B1a2phIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzUzODM2OCwiZXhwIjoyMDkzMTE0MzY4fQ.8yFGJpMXyFErt4qPxv5Urlyrab-HSR3GDSYfVHHUYbw";
+const SUPABASE_URL = process.env.SUPABASE_URL || "https://sonkifovmmeyoqkmxlxs.supabase.co";
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "YOUR_NEW_SERVICE_ROLE_KEY";
 const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+// PostgreSQL Direct Connection Pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false } // Required for Supabase direct connections
+});
+
 const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key";
 
 app.use(express.static(__dirname));
@@ -40,6 +48,16 @@ if (GOOGLE_SERVICE_ACCOUNT_EMAIL && GOOGLE_PRIVATE_KEY) {
   drive = google.drive({ version: 'v3', auth });
   calendar = google.calendar({ version: 'v3', auth });
 }
+
+// --- DATABASE TEST ---
+app.get("/api/db-test", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW()");
+    res.json({ success: true, time: result.rows[0].now });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // --- PUBLIC API ---
 app.get("/api/projects", async (req, res) => {
