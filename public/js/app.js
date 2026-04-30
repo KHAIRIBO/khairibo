@@ -1,14 +1,47 @@
 import React, { useEffect, useMemo, useRef, useState } from "https://esm.sh/react@18.3.1";
 import { createRoot } from "https://esm.sh/react-dom@18.3.1/client";
 import htm from "https://esm.sh/htm@3.1.1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 
 const html = htm.bind(React.createElement);
 
-// Dynamic import of Supabase utilities
-async function loadSupabaseUtils() {
-  const utils = await import("/js/supabase.js");
-  return utils;
-}
+// Supabase Configuration
+const SUPABASE_URL = "https://jakurlvpoztwzsgpukja.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impha3VybHZwb3p0d3pzZ3B1a2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1MzgzNjgsImV4cCI6MjA5MzExNDM2OH0.IhJjbY8w36zw4Z4KyutxjXIwKJi_oxWcpVjUrPoa1YY";
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Data Fetching Helpers
+const api = {
+  fetchProjects: async () => {
+    const { data, error } = await supabase.from("projects").select("*").order("created_at", { ascending: false });
+    return error ? [] : (data || []);
+  },
+  fetchAbout: async () => {
+    const { data, error } = await supabase.from("about").select("*").single();
+    return (error && error.code !== "PGRST116") ? null : (data || null);
+  },
+  fetchContacts: async () => {
+    const { data, error } = await supabase.from("contacts").select("*");
+    return error ? [] : (data || []);
+  },
+  submitContactForm: async (name, email, message) => {
+    const { data, error } = await supabase.from("contact_submissions").insert([{ name, email, message, created_at: new Date() }]);
+    return error ? { success: false, error: error.message } : { success: true, data };
+  },
+  // Admin Data (Service Role handled by server API)
+  fetchContactSubmissions: async () => {
+    const response = await fetch("/api/admin/contacts"); // This returns submissions
+    return await response.json();
+  },
+  deleteProject: async (id) => {
+    const response = await fetch(`/api/admin/projects/${id}`, { method: "DELETE" });
+    return await response.json();
+  },
+  deleteContactSubmission: async (id) => {
+    const response = await fetch(`/api/admin/contact_submissions/${id}`, { method: "DELETE" });
+    return await response.json();
+  }
+};
 
 const ADMIN_PASSWORD_KEY = "admin_password";
 const ADMIN_AUTH_KEY = "admin_authed";
@@ -134,7 +167,7 @@ function App() {
   const [lang, setLang] = useState(localStorage.getItem("site_lang") || "en");
   const [route, setRoute] = useState(window.location.pathname || "/");
   const [statusText, setStatusText] = useState("");
-  
+
   // Supabase data states
   const [projects, setProjects] = useState([]);
   const [about, setAbout] = useState(null);
@@ -147,7 +180,6 @@ function App() {
 
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef(null);
-  const supabaseRef = useRef(null);
 
   const t = useMemo(() => translations[lang] || translations.en, [lang]);
 
@@ -163,18 +195,13 @@ function App() {
     localStorage.setItem("site_lang", lang);
   }, [lang]);
 
-  // Load Supabase utilities
-  useEffect(() => {
-    loadSupabaseUtils().then((utils) => {
-      supabaseRef.current = utils;
-    });
-  }, []);
+
 
   // Fetch projects when navigating to /projects
   useEffect(() => {
-    if (route === "/projects" && supabaseRef.current && projects.length === 0) {
+    if (route === "/projects" && projects.length === 0) {
       setLoading(true);
-      supabaseRef.current.fetchProjects().then((data) => {
+      api.fetchProjects().then((data) => {
         setProjects(data);
         setLoading(false);
       });
@@ -183,9 +210,9 @@ function App() {
 
   // Fetch about when navigating to /about
   useEffect(() => {
-    if (route === "/about" && supabaseRef.current && !about) {
+    if (route === "/about" && !about) {
       setLoading(true);
-      supabaseRef.current.fetchAbout().then((data) => {
+      api.fetchAbout().then((data) => {
         setAbout(data);
         setLoading(false);
       });
@@ -194,9 +221,9 @@ function App() {
 
   // Fetch contacts when navigating to /contacts
   useEffect(() => {
-    if (route === "/contacts" && supabaseRef.current && contacts.length === 0) {
+    if (route === "/contacts" && contacts.length === 0) {
       setLoading(true);
-      supabaseRef.current.fetchContacts().then((data) => {
+      api.fetchContacts().then((data) => {
         setContacts(data);
         setLoading(false);
       });
@@ -205,22 +232,21 @@ function App() {
 
   // Fetch admin data when entering /admin
   useEffect(() => {
-    if (route === "/admin" && supabaseRef.current) {
+    if (route === "/admin") {
       loadAdminData();
     }
   }, [route]);
 
   const loadAdminData = async () => {
-    if (!supabaseRef.current) return;
     setLoading(true);
-    
+
     const [projectsData, contactsData, aboutData, submissionsData] = await Promise.all([
-      supabaseRef.current.fetchProjects(),
-      supabaseRef.current.fetchContacts(),
-      supabaseRef.current.fetchAbout(),
-      supabaseRef.current.fetchContactSubmissions()
+      api.fetchProjects(),
+      api.fetchContacts(),
+      api.fetchAbout(),
+      api.fetchContactSubmissions()
     ]);
-    
+
     setProjects(projectsData);
     setContacts(contactsData);
     setAbout(aboutData);
@@ -266,12 +292,10 @@ function App() {
 
   const handleContactSubmit = async (e) => {
     e.preventDefault();
-    if (!supabaseRef.current) return;
-    
     setLoading(true);
-    const result = await supabaseRef.current.submitContactForm(contactForm.name, contactForm.email, contactForm.message);
+    const result = await api.submitContactForm(contactForm.name, contactForm.email, contactForm.message);
     setLoading(false);
-    
+
     if (result.success) {
       setFormStatus(t.contactSuccess);
       setContactForm({ name: "", email: "", message: "" });
@@ -281,16 +305,16 @@ function App() {
   };
 
   const handleDeleteProject = async (id) => {
-    if (!supabaseRef.current || !window.confirm("Delete this project?")) return;
-    const result = await supabaseRef.current.deleteProject(id);
+    if (!window.confirm("Delete this project?")) return;
+    const result = await api.deleteProject(id);
     if (result.success) {
       setProjects(projects.filter(p => p.id !== id));
     }
   };
 
   const handleDeleteSubmission = async (id) => {
-    if (!supabaseRef.current || !window.confirm("Delete this submission?")) return;
-    const result = await supabaseRef.current.deleteContactSubmission(id);
+    if (!window.confirm("Delete this submission?")) return;
+    const result = await api.deleteContactSubmission(id);
     if (result.success) {
       setContactSubmissions(contactSubmissions.filter(s => s.id !== id));
     }
@@ -582,8 +606,8 @@ function App() {
             <div className="header-controls">
               <div className="lang-switch" aria-label="Language switch">
                 ${["en", "fr", "ar"].map((code) =>
-                  html`<button className=${`lang-btn ${lang === code ? "active" : ""}`} onClick=${() => setLang(code)}>${code.toUpperCase()}</button>`
-                )}
+    html`<button className=${`lang-btn ${lang === code ? "active" : ""}`} onClick=${() => setLang(code)}>${code.toUpperCase()}</button>`
+  )}
               </div>
             </div>
           </div>
