@@ -10,7 +10,7 @@ const SUPABASE_URL = "https://jakurlvpoztwzsgpukja.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impha3VybHZwb3p0d3pzZ3B1a2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1MzgzNjgsImV4cCI6MjA5MzExNDM2OH0.IhJjbY8w36zw4Z4KyutxjXIwKJi_oxWcpVjUrPoa1YY";
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Data Fetching Helpers
+// Senior Data Fetching Helpers
 const api = {
   fetchProjects: async () => {
     const { data, error } = await supabase.from("projects").select("*").order("created_at", { ascending: false });
@@ -28,10 +28,10 @@ const api = {
     const { data, error } = await supabase.from("contact_submissions").insert([{ name, email, message, created_at: new Date() }]);
     return error ? { success: false, error: error.message } : { success: true, data };
   },
-  // Admin Data (Service Role handled by server API)
   fetchContactSubmissions: async () => {
-    const response = await fetch("/api/admin/contacts"); // This returns submissions
-    return await response.json();
+    const response = await fetch("/api/admin/contact_submissions");
+    const payload = await response.json();
+    return payload.data || [];
   },
   deleteProject: async (id) => {
     const response = await fetch(`/api/admin/projects/${id}`, { method: "DELETE" });
@@ -194,8 +194,6 @@ function App() {
     document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
     localStorage.setItem("site_lang", lang);
   }, [lang]);
-
-
 
   // Fetch projects when navigating to /projects
   useEffect(() => {
