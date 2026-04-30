@@ -6,7 +6,7 @@ const html = htm.bind(React.createElement);
 
 // Dynamic import of Supabase utilities
 async function loadSupabaseUtils() {
-  const utils = await import("/js/supabase.js");
+  const utils = await import("./js/supabase.js");
   return utils;
 }
 
@@ -134,7 +134,7 @@ function App() {
   const [lang, setLang] = useState(localStorage.getItem("site_lang") || "en");
   const [route, setRoute] = useState(window.location.pathname || "/");
   const [statusText, setStatusText] = useState("");
-  
+
   // Supabase data states
   const [projects, setProjects] = useState([]);
   const [about, setAbout] = useState(null);
@@ -213,14 +213,14 @@ function App() {
   const loadAdminData = async () => {
     if (!supabaseRef.current) return;
     setLoading(true);
-    
+
     const [projectsData, contactsData, aboutData, submissionsData] = await Promise.all([
       supabaseRef.current.fetchProjects(),
       supabaseRef.current.fetchContacts(),
       supabaseRef.current.fetchAbout(),
       supabaseRef.current.fetchContactSubmissions()
     ]);
-    
+
     setProjects(projectsData);
     setContacts(contactsData);
     setAbout(aboutData);
@@ -267,11 +267,11 @@ function App() {
   const handleContactSubmit = async (e) => {
     e.preventDefault();
     if (!supabaseRef.current) return;
-    
+
     setLoading(true);
     const result = await supabaseRef.current.submitContactForm(contactForm.name, contactForm.email, contactForm.message);
     setLoading(false);
-    
+
     if (result.success) {
       setFormStatus(t.contactSuccess);
       setContactForm({ name: "", email: "", message: "" });
@@ -582,8 +582,8 @@ function App() {
             <div className="header-controls">
               <div className="lang-switch" aria-label="Language switch">
                 ${["en", "fr", "ar"].map((code) =>
-                  html`<button className=${`lang-btn ${lang === code ? "active" : ""}`} onClick=${() => setLang(code)}>${code.toUpperCase()}</button>`
-                )}
+    html`<button className=${`lang-btn ${lang === code ? "active" : ""}`} onClick=${() => setLang(code)}>${code.toUpperCase()}</button>`
+  )}
               </div>
             </div>
           </div>
