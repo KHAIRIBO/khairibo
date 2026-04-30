@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Khairi Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <style>
+    /* Additional utility styles for SPA */
+    .hidden { display: none !important; }
+    #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 100; display: flex; flex-direction: column; gap: 10px; }
+    .toast { background: var(--admin-text); color: #fff; padding: 14px 20px; border-radius: 12px; font-weight: 500; box-shadow: 0 10px 25px rgba(0,0,0,0.15); animation: slideIn 0.3s ease; }
+    .toast.error { background: #d94d3d; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    
+    /* Login Screen styles */
+    #login-view { height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .login-card { width: min(400px, 90%); background: #fff; padding: 40px; border-radius: 24px; box-shadow: var(--admin-shadow); border: 1px solid var(--admin-border); }
+    .login-card h2 { font-family: Poppins; margin: 0 0 24px; text-align: center; }
+    .login-card .field-label { margin-bottom: 16px; }
+    .login-card button { width: 100%; margin-top: 10px; padding: 14px; }
+  </style>
+</head>
+<body>
+
+  <div id="toast-container"></div>
+
+  <!-- LOGIN VIEW -->
+  <div id="login-view">
+    <div class="login-card">
+      <h2>Admin Login</h2>
+      <form id="login-form">
+        <label class="field-label">Username
+          <input type="text" id="login-username" class="field-input" required />
+        </label>
+        <label class="field-label">Password
+          <input type="password" id="login-password" class="field-input" required />
+        </label>
+        <button type="submit" class="pill-btn">Access Dashboard</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- DASHBOARD VIEW (SPA) -->
+  <div id="dashboard-view" class="hidden">
+    <div class="admin-shell">
+      
+      <!-- Topbar -->
+      <header class="admin-topbar">
+        <div class="brand">khairi<span>admin</span></div>
+        <div class="topbar-actions">
+          <button id="logout-btn" class="ghost-btn">Logout</button>
+        </div>
+      </header>
+
+      <div class="layout-grid">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+          <div class="panel-card">
+            <div class="tab-list">
+              <button class="tab-btn active" data-target="panel-home">Dashboard Home</button>
+              <button class="tab-btn" data-target="panel-contacts">Contacts</button>
+              <button class="tab-btn" data-target="panel-notes">Notes</button>
+              <button class="tab-btn" data-target="panel-files">Files & Drive</button>
+              <button class="tab-btn" data-target="panel-calendar">Calendar</button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-panel">
+          
+          <!-- HOME PANEL -->
+          <section id="panel-home" class="panel-card tab-panel">
+            <h2 class="section-title">Overview</h2>
+            <div class="stats-grid" id="dashboard-stats">
+              <!-- Loaded via JS -->
+            </div>
+          </section>
+
+          <!-- CONTACTS PANEL -->
+          <section id="panel-contacts" class="panel-card tab-panel hidden">
+            <div class="toolbar">
+              <h2 class="section-title">Messages</h2>
+              <button class="refresh-btn" onclick="app.loadContacts()">Refresh</button>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr><th>Date</th><th>Name</th><th>Email</th><th>Message</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="contacts-table-body"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- NOTES PANEL -->
+          <section id="panel-notes" class="panel-card tab-panel hidden">
+            <div class="toolbar">
+              <h2 class="section-title">Admin Notes</h2>
+              <button class="pill-btn" onclick="app.openNoteModal()">+ New Note</button>
+            </div>
+            <div class="card-grid" id="notes-grid" style="margin-top: 16px;"></div>
+          </section>
+
+          <!-- FILES PANEL -->
+          <section id="panel-files" class="panel-card tab-panel hidden">
+            <div class="toolbar">
+              <h2 class="section-title">Google Drive Files</h2>
+              <button class="pill-btn" onclick="document.getElementById('file-upload-input').click()">+ Upload File</button>
+              <input type="file" id="file-upload-input" class="hidden" onchange="app.uploadFile(event)" />
+            </div>
+            <div class="table-wrap" style="margin-top: 16px;">
+              <table class="data-table">
+                <thead>
+                  <tr><th>File Name</th><th>Type</th><th>Uploaded</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="files-table-body"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- CALENDAR PANEL -->
+          <section id="panel-calendar" class="panel-card tab-panel hidden">
+            <div class="toolbar">
+              <h2 class="section-title">Google Calendar Events</h2>
+              <button class="pill-btn" onclick="app.openEventModal()">+ New Event</button>
+            </div>
+            <div class="table-wrap" style="margin-top: 16px;">
+              <table class="data-table">
+                <thead>
+                  <tr><th>Event Title</th><th>Start</th><th>End</th><th>Description</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="events-table-body"></tbody>
+              </table>
+            </div>
+          </section>
+
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <!-- Note Modal -->
+  <div id="note-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Note</h3>
+        <button class="ghost-mini" onclick="app.closeModal('note-modal')">Close</button>
+      </div>
+      <form id="note-form" class="modal-form" onsubmit="app.saveNote(event)">
+        <input type="hidden" id="note-id" />
+        <label class="field-label">Title <input type="text" id="note-title" class="field-input" required /></label>
+        <label class="field-label">Content <textarea id="note-content" class="field-textarea" required></textarea></label>
+        <div class="modal-actions" style="grid-column: 1 / -1;">
+          <button type="submit" class="pill-btn">Save Note</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Event Modal -->
+  <div id="event-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>New Event</h3>
+        <button class="ghost-mini" onclick="app.closeModal('event-modal')">Close</button>
+      </div>
+      <form id="event-form" class="modal-form" onsubmit="app.saveEvent(event)">
+        <label class="field-label" style="grid-column: 1 / -1;">Event Title <input type="text" id="event-title" class="field-input" required /></label>
+        <label class="field-label">Start Date/Time <input type="datetime-local" id="event-start" class="field-input" required /></label>
+        <label class="field-label">End Date/Time <input type="datetime-local" id="event-end" class="field-input" required /></label>
+        <label class="field-label" style="grid-column: 1 / -1;">Description <textarea id="event-desc" class="field-textarea"></textarea></label>
+        <div class="modal-actions" style="grid-column: 1 / -1;">
+          <button type="submit" class="pill-btn">Add to Google Calendar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/admin.js" type="module"></script>
+</body>
+</html>

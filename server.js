@@ -265,13 +265,14 @@ app.put("/api/admin/:table/:id", requireAdmin, async (req, res, next) => {
   }
 });
 
-app.get('/admin', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
-app.get('/admin.html', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
-app.get('/data', (req, res) => { res.sendFile(path.join(__dirname, 'data.html')); });
-app.get('/data.html', (req, res) => { res.sendFile(path.join(__dirname, 'data.html')); });
+app.get('/admin', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'admin.html')); });
+app.get('/admin.html', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'admin.html')); });
+
+// Static files
+app.use(express.static(path.join(__dirname, "public")));
 
 // SPA fallback
-app.get("*", (req, res) => { res.sendFile(path.join(__dirname, "index.html")); });
+app.get("*", (req, res) => { res.sendFile(path.join(__dirname, "public", "index.html")); });
 
 if (require.main === module) {
   app.listen(PORT, () => {
