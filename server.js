@@ -30,12 +30,13 @@ const GOOGLE_CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID;
 
 let drive, calendar;
 if (GOOGLE_SERVICE_ACCOUNT_EMAIL && GOOGLE_PRIVATE_KEY) {
-  const auth = new google.auth.JWT(
-    GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    null,
-    GOOGLE_PRIVATE_KEY,
-    ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/calendar']
-  );
+  const auth = new google.auth.GoogleAuth({
+    credentials: {
+      client_email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      private_key: GOOGLE_PRIVATE_KEY
+    },
+    scopes: ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/calendar']
+  });
   drive = google.drive({ version: 'v3', auth });
   calendar = google.calendar({ version: 'v3', auth });
 }
