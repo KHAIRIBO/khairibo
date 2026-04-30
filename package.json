@@ -1,19 +1,22 @@
 {
-  "name": "node-render-app",
+  "name": "kbo-portfolio-react-node",
   "version": "1.0.0",
-  "main": "server.js",
+  "private": true,
   "scripts": {
     "start": "node server.js",
-    "dev": "concurrently \"npm run dev --prefix frontend\" \"node backend/server.js\"",
-    "build": "npm install --prefix frontend && npm run build --prefix frontend"
+    "dev": "node server.js",
+    "build": "echo 'No build required'"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
     "@vercel/analytics": "^2.0.1",
-    "concurrently": "^9.2.1",
-    "express": "^4.22.1",
-    "express-session": "^1.19.0",
-    "firebase": "^12.12.0",
-    "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.4.2",
+    "express": "^4.21.2",
+    "firebase": "^12.12.1",
+    "googleapis": "^171.4.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.1.1"
   }
 }
