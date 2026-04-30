@@ -6,7 +6,7 @@ const html = htm.bind(React.createElement);
 
 // Dynamic import of Supabase utilities
 async function loadSupabaseUtils() {
-  const utils = await import("./supabase.js");
+  const utils = await import("/js/supabase.js");
   return utils;
 }
 
