@@ -41,6 +41,28 @@ if (GOOGLE_SERVICE_ACCOUNT_EMAIL && GOOGLE_PRIVATE_KEY) {
   calendar = google.calendar({ version: 'v3', auth });
 }
 
+// --- PUBLIC API ---
+app.get("/api/projects", async (req, res) => {
+  const { data, error } = await adminClient.from("projects").select("*").order("created_at", { ascending: false });
+  res.json(error ? { error: error.message } : data);
+});
+
+app.get("/api/about", async (req, res) => {
+  const { data, error } = await adminClient.from("about").select("*").single();
+  res.json(error ? { error: error.message } : data);
+});
+
+app.get("/api/contacts", async (req, res) => {
+  const { data, error } = await adminClient.from("contacts").select("*");
+  res.json(error ? { error: error.message } : data);
+});
+
+app.post("/api/contact", async (req, res) => {
+  const { name, email, message } = req.body;
+  const { data, error } = await adminClient.from("contact_submissions").insert([{ name, email, message, created_at: new Date() }]);
+  res.json(error ? { error: error.message } : { success: true, data });
+});
+
 // --- AUTHENTICATION ---
 app.post("/api/admin/login", async (req, res) => {
   const { username, password } = req.body;

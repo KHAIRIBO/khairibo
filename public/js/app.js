@@ -1,32 +1,31 @@
 import React, { useEffect, useMemo, useRef, useState } from "https://esm.sh/react@18.3.1";
 import { createRoot } from "https://esm.sh/react-dom@18.3.1/client";
 import htm from "https://esm.sh/htm@3.1.1";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 
 const html = htm.bind(React.createElement);
 
-// Supabase Configuration
-const SUPABASE_URL = "https://jakurlvpoztwzsgpukja.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impha3VybHZwb3p0d3pzZ3B1a2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1MzgzNjgsImV4cCI6MjA5MzExNDM2OH0.IhJjbY8w36zw4Z4KyutxjXIwKJi_oxWcpVjUrPoa1YY";
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// Senior Data Fetching Helpers
+// Senior Data Fetching Helpers (Communicating via Server API)
 const api = {
   fetchProjects: async () => {
-    const { data, error } = await supabase.from("projects").select("*").order("created_at", { ascending: false });
-    return error ? [] : (data || []);
+    const response = await fetch("/api/projects");
+    return await response.json();
   },
   fetchAbout: async () => {
-    const { data, error } = await supabase.from("about").select("*").single();
-    return (error && error.code !== "PGRST116") ? null : (data || null);
+    const response = await fetch("/api/about");
+    const data = await response.json();
+    return data.error ? null : data;
   },
   fetchContacts: async () => {
-    const { data, error } = await supabase.from("contacts").select("*");
-    return error ? [] : (data || []);
+    const response = await fetch("/api/contacts");
+    return await response.json();
   },
   submitContactForm: async (name, email, message) => {
-    const { data, error } = await supabase.from("contact_submissions").insert([{ name, email, message, created_at: new Date() }]);
-    return error ? { success: false, error: error.message } : { success: true, data };
+    const response = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, message })
+    });
+    return await response.json();
   },
   fetchContactSubmissions: async () => {
     const response = await fetch("/api/admin/contact_submissions");
