@@ -146,6 +146,11 @@ body{
   100% { opacity: 0.4; }
 }
 
+.login-card {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
 /* Small screens */
 @media (max-width:1000px){
   .hero-grid{grid-template-columns:1fr;gap:28px}

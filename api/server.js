@@ -24,6 +24,21 @@ if (supabaseUrl && supabaseKey) {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "..", "public")));
 
+// Save data to Supabase
+app.post("/api/save", async (req, res) => {
+  if (!supabase) return res.status(500).json({ success: false, error: "Supabase not configured" });
+  const { table, data } = req.body;
+  if (!table || !data) return res.status(400).json({ success: false, error: "Missing table or data" });
+
+  try {
+    const { error } = await supabase.from(table).insert([data]);
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Supabase Health Check
 app.get("/api/db-status", async (req, res) => {
   if (!supabase) return res.json({ connected: false, error: "Supabase not configured" });
