@@ -72,7 +72,8 @@ function App() {
                 try {
                   const res = await fetch("/api/db-test");
                   const data = await res.json();
-                  alert(data.success ? `Connected to Supabase!\nURL: ${data.supabase_url}` : `Error: ${data.error}`);
+                  alert(data.success ? "Connected to Supabase!" : `Error: ${data.error}`);
+
                 } catch (e) {
                   alert("Failed to connect to API");
                 }

@@ -6,7 +6,7 @@ A minimalist, high-end portfolio built with Node.js, Express, and React (via esm
 
 This project is optimized for **Vercel**. 
 
-1. Connect this repository ([khairibo](https://github.com/KHAIRIBO/khairibo.git)) to Vercel.
+1. Connect this repository to Vercel.
 2. Set the following Environment Variables in the Vercel dashboard:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
