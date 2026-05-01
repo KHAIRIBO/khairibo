@@ -22,6 +22,11 @@ const translations = {
     loginEmail: "Email",
     loginPassword: "Password",
     loginSubmit: "Sign In",
+    aboutTitle: "About Me",
+    educationTitle: "Education",
+    skillsTitle: "Technical Skills",
+    experienceTitle: "Experience & Activities",
+    languagesTitle: "Languages",
     loading: "Loading..."
   },
   fr: {
@@ -37,6 +42,11 @@ const translations = {
     loginEmail: "Email",
     loginPassword: "Mot de passe",
     loginSubmit: "Se connecter",
+    aboutTitle: "À propos de moi",
+    educationTitle: "Éducation",
+    skillsTitle: "Compétences Techniques",
+    experienceTitle: "Expérience & Activités",
+    languagesTitle: "Langues",
     loading: "Chargement..."
   },
   ar: {
@@ -52,6 +62,11 @@ const translations = {
     loginEmail: "????? ??????????",
     loginPassword: "word ?????",
     loginSubmit: "????? ?????",
+    aboutTitle: "?? ???",
+    educationTitle: "???????",
+    skillsTitle: "??????? ??????",
+    experienceTitle: "??????? ????????",
+    languagesTitle: "??????",
     loading: "???? ???????..."
   },
 };
@@ -88,6 +103,21 @@ function App() {
       .then(data => setDbConnected(data.connected))
       .catch(() => setDbConnected(false));
   }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("active");
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, [route]);
+
+
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -144,7 +174,6 @@ function App() {
               <button className="cta" onClick=${() => alert("Projects clicked")}>${t.ctaProjects}</button>
               <a href="/Khairi_Bouzakher_CV.pdf" download="Khairi_Bouzakher_CV.pdf" className="cta secondary">${t.ctaCv}</a>
               <button className="cta secondary" onClick=${async () => {
-
                 try {
                   const res = await fetch("/api/db-test");
                   const data = await res.json();
@@ -160,6 +189,53 @@ function App() {
           </figure>
         </div>
       </main>
+
+      <section className="cv-section">
+        <div className="container">
+          <div className="cv-grid">
+            <div className="cv-card profile-card reveal">
+              <h2>${t.aboutTitle}</h2>
+              <p>Motivated Computer Science student specializing in Web Development and Robotics. Skilled in HTML, PHP, Python, and SQL with a strong interest in building real-world solutions. Active in clubs and robotics competitions with strong teamwork and problem-solving skills.</p>
+            </div>
+            
+            <div className="cv-card education-card reveal">
+              <h3>${t.educationTitle}</h3>
+              <div className="cv-item">
+                <p className="item-title">ISIMG - Higher Institute of Computer Science and Multimedia of Gabès</p>
+                <p className="item-subtitle">Specialization: Web Development & Robotics Engineering (LISI)</p>
+                <p className="item-date">Baccalaureate (2023/2024) - Good average</p>
+              </div>
+            </div>
+
+            <div className="cv-card skills-card reveal">
+              <h3>${t.skillsTitle}</h3>
+              <ul className="skills-list">
+                <li>HTML, PHP, Python, SQL</li>
+                <li>Databases: MySQL, PostgreSQL</li>
+                <li>Web Development (Front-end & Back-end basics)</li>
+              </ul>
+            </div>
+
+            <div className="cv-card experience-card reveal">
+              <h3>${t.experienceTitle}</h3>
+              <ul className="cv-list">
+                <li>Active member in music, social, and tech clubs</li>
+                <li>Participated in robotics competitions</li>
+                <li>Earned certificates in robotics and IT</li>
+              </ul>
+            </div>
+
+            <div className="cv-card languages-card reveal">
+              <h3>${t.languagesTitle}</h3>
+              <div className="lang-items">
+                <span>Arabic (Native)</span>
+                <span>French (Good)</span>
+                <span>English (Good)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     `;
   };
 

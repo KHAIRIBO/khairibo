@@ -151,6 +151,56 @@ body{
   margin: 0 auto;
 }
 
+/* CV Section */
+.cv-section { padding: 80px 0; background: rgba(255, 255, 255, 0.4); }
+.cv-grid { 
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 24px; 
+}
+.cv-card {
+  background: #fff;
+  border: 1px solid #ece7e0;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.cv-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
+.cv-card h2, .cv-card h3 { font-family: Poppins, sans-serif; margin-top: 0; color: var(--text); }
+.profile-card { grid-column: span 2; }
+.skills-card { grid-column: span 1; }
+.education-card { grid-column: span 2; }
+.experience-card { grid-column: span 1; }
+.languages-card { grid-column: span 3; }
+
+.cv-item { margin-bottom: 20px; }
+.item-title { font-weight: 700; margin: 0; font-size: 18px; }
+.item-subtitle { color: var(--caramel); margin: 4px 0; font-weight: 600; }
+.item-date { font-size: 14px; color: var(--muted); }
+
+.skills-list, .cv-list { padding-left: 20px; margin: 0; color: var(--muted); line-height: 1.8; }
+.lang-items { display: flex; gap: 12px; flex-wrap: wrap; }
+.lang-items span { 
+  background: var(--bg); 
+  padding: 6px 14px; 
+  border-radius: 99px; 
+  font-size: 14px; 
+  font-weight: 600; 
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* Animations */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s ease-out;
+}
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* Small screens */
 @media (max-width:1000px){
   .hero-grid{grid-template-columns:1fr;gap:28px}
