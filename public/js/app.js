@@ -27,6 +27,8 @@ const translations = {
     skillsTitle: "Technical Skills",
     experienceTitle: "Experience & Activities",
     languagesTitle: "Languages",
+    projectsTitle: "My Projects",
+    viewProject: "View on GitHub",
     loading: "Loading..."
   },
   fr: {
@@ -47,6 +49,8 @@ const translations = {
     skillsTitle: "Compétences Techniques",
     experienceTitle: "Expérience & Activités",
     languagesTitle: "Langues",
+    projectsTitle: "Mes Projets",
+    viewProject: "Voir sur GitHub",
     loading: "Chargement..."
   },
   ar: {
@@ -67,6 +71,8 @@ const translations = {
     skillsTitle: "??????? ??????",
     experienceTitle: "??????? ????????",
     languagesTitle: "??????",
+    projectsTitle: "???????",
+    viewProject: "??? ??? GitHub",
     loading: "???? ???????..."
   },
 };
@@ -227,6 +233,34 @@ function App() {
                 <span>French (Good)</span>
                 <span>English (Good)</span>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="cv-section projects-section">
+        <div className="container">
+          <h2 className="section-title reveal">${t.projectsTitle}</h2>
+          <div className="cv-grid projects-grid">
+            <div className="cv-card project-card reveal">
+              <h3>website-dropshoping-</h3>
+              <p>A web application inspired by Shopify Collective, featuring user authentication, admin dashboard, profile management, and resource navigation.</p>
+              <div className="project-tags"><span>PHP</span></div>
+              <a href="https://github.com/KHAIRIBO/website-dropshoping-" target="_blank" className="cta secondary mini">${t.viewProject}</a>
+            </div>
+
+            <div className="cv-card project-card reveal">
+              <h3>dbrtna</h3>
+              <p>Tunisian cuisine collection 🇹🇳 featuring traditional and modern dishes. Discover famous foods like Couscous, Brik, and Lablabi.</p>
+              <div className="project-tags"><span>JavaScript</span></div>
+              <a href="https://github.com/KHAIRIBO/dbrtna" target="_blank" className="cta secondary mini">${t.viewProject}</a>
+            </div>
+
+            <div className="cv-card project-card reveal">
+              <h3>khairibo</h3>
+              <p>Modern minimalist portfolio with dark mode, animations, and Supabase integration.</p>
+              <div className="project-tags"><span>JavaScript</span><span>Node.js</span></div>
+              <a href="https://github.com/KHAIRIBO/khairibo" target="_blank" className="cta secondary mini">${t.viewProject}</a>
             </div>
           </div>
         </div>
