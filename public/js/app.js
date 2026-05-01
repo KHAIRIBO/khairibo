@@ -173,16 +173,11 @@ function App() {
             <div className="cta-row">
               <button className="cta" onClick=${() => alert("Projects clicked")}>${t.ctaProjects}</button>
               <a href="/Khairi_Bouzakher_CV.pdf" download="Khairi_Bouzakher_CV.pdf" className="cta secondary">${t.ctaCv}</a>
-              <button className="cta secondary" onClick=${async () => {
-                try {
-                  const res = await fetch("/api/db-test");
-                  const data = await res.json();
-                  alert(data.success ? "Connected to Supabase!" : `Error: ${data.error}`);
-                } catch (e) {
-                  alert("Failed to connect to API");
-                }
-              }}>Check Database</button>
+              <a href="https://linkedin.com/in/khairi-bouzakher/" target="_blank" className="social-link" title="LinkedIn">
+                <i className="fa-brands fa-linkedin"></i>
+              </a>
             </div>
+
           </section>
           <figure className="hero-image" aria-hidden="true">
             <img src="photo/khairibo.png" alt="Avatar" />

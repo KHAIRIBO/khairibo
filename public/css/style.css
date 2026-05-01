@@ -201,6 +201,26 @@ body{
   transform: translateY(0);
 }
 
+.social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: #fff;
+  border: 1px solid #ece7e0;
+  border-radius: 12px;
+  color: #0077b5; /* LinkedIn Color */
+  font-size: 20px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+.social-link:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+  background: var(--bg);
+}
+
 /* Small screens */
 @media (max-width:1000px){
   .hero-grid{grid-template-columns:1fr;gap:28px}
