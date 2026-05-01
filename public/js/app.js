@@ -142,8 +142,9 @@ function App() {
             <p className="lead">${t.lead}</p>
             <div className="cta-row">
               <button className="cta" onClick=${() => alert("Projects clicked")}>${t.ctaProjects}</button>
-              <button className="cta secondary" onClick=${() => alert("CV clicked")}>${t.ctaCv}</button>
+              <a href="/Khairi_Bouzakher_CV.pdf" download="Khairi_Bouzakher_CV.pdf" className="cta secondary">${t.ctaCv}</a>
               <button className="cta secondary" onClick=${async () => {
+
                 try {
                   const res = await fetch("/api/db-test");
                   const data = await res.json();
