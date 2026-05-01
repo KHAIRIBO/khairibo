@@ -10,72 +10,103 @@ const html = htm.bind(React.createElement);
 
 const translations = {
   en: {
-    intro: "Hi, I'm khairi,",
-    title: "I'M A\nSTUDENT",
-    lead: "Welcome to my portfolio. Feel free to explore my projects and download my CV at any time. Do not hesitate to contact me.",
-    ctaProjects: "View My Projects",
-    ctaCv: "Download CV",
     navHome: "Home",
     navLogin: "Login",
-    loginTitle: "Sign In",
-    loginDesc: "Enter your credentials to access your account.",
+    intro: "Hi, I'm khairi,",
+    title: "I'M A\nSTUDENT",
+    lead: "Computer Science student specializing in Web Development and Robotics Engineering.",
+    ctaProjects: "View Projects",
+    ctaCv: "Download CV",
+    loginTitle: "Dashboard Access",
+    loginDesc: "Sign in to manage your submissions and database settings.",
     loginEmail: "Email",
     loginPassword: "Password",
     loginSubmit: "Sign In",
     aboutTitle: "About Me",
+    aboutDesc: "Motivated Computer Science student specializing in Web Development and Robotics. Skilled in HTML, PHP, Python, and SQL with a strong interest in building real-world solutions. Active in clubs and robotics competitions with strong teamwork and problem-solving skills.",
     educationTitle: "Education",
+    eduPlace: "ISIMG - Higher Institute of Computer Science and Multimedia of Gabès",
+    eduSpec: "Specialization: Web Development & Robotics Engineering (LISI)",
+    eduDate: "Baccalaureate (2023/2024) - Good average",
     skillsTitle: "Technical Skills",
+    skillsList: ["HTML, PHP, Python, SQL", "Databases: MySQL, PostgreSQL", "Web Development (Front-end & Back-end basics)"],
     experienceTitle: "Experience & Activities",
+    expList: ["Active member in music, social, and tech clubs", "Participated in robotics competitions", "Earned certificates in robotics and IT"],
     languagesTitle: "Languages",
+    langList: ["Arabic (Native)", "French (Good)", "English (Good)"],
     projectsTitle: "My Projects",
     viewProject: "View on GitHub",
+    project1Desc: "E-commerce web application inspired by Shopify Collective, featuring full admin dashboard and user management.",
+    project2Desc: "Tunisian cuisine collection featuring traditional and modern dishes from across Tunisia.",
+    project3Desc: "Modern minimalist portfolio with dark mode, 3D animations, and Supabase integration.",
     loading: "Loading..."
   },
   fr: {
-    intro: "Salut, je suis khairi,",
-    title: "JE SUIS\nETUDIANT",
-    lead: "Bienvenue sur mon portfolio. N'hesitez pas a explorer mes projets et a telecharger mon CV a tout moment.",
-    ctaProjects: "Voir mes projets",
-    ctaCv: "Telecharger CV",
     navHome: "Accueil",
     navLogin: "Connexion",
-    loginTitle: "Se connecter",
-    loginDesc: "Entrez vos identifiants pour acceder a votre compte.",
+    intro: "Salut, je suis khairi,",
+    title: "JE SUIS\nÉTUDIANT",
+    lead: "Étudiant en Informatique spécialisé en Développement Web et Ingénierie Robotique.",
+    ctaProjects: "Mes Projets",
+    ctaCv: "Télécharger CV",
+    loginTitle: "Accès Dashboard",
+    loginDesc: "Connectez-vous pour gérer vos soumissions et paramètres.",
     loginEmail: "Email",
     loginPassword: "Mot de passe",
     loginSubmit: "Se connecter",
-    aboutTitle: "À propos de moi",
-    educationTitle: "Éducation",
-    skillsTitle: "Compétences Techniques",
-    experienceTitle: "Expérience & Activités",
+    aboutTitle: "À propos",
+    aboutDesc: "Étudiant motivé en informatique spécialisé en développement Web et robotique. Compétent en HTML, PHP, Python et SQL avec un fort intérêt pour la création de solutions réelles. Actif dans les clubs et les compétitions de robotique.",
+    educationTitle: "Formation",
+    eduPlace: "ISIMG - Institut Supérieur d'Informatique et de Multimédia de Gabès",
+    eduSpec: "Spécialisation : Développement Web & Ingénierie Robotique (LISI)",
+    eduDate: "Baccalauréat (2023/2024) - Mention Bien",
+    skillsTitle: "Compétences",
+    skillsList: ["HTML, PHP, Python, SQL", "Bases de données : MySQL, PostgreSQL", "Développement Web (Front-end & Back-end)"],
+    experienceTitle: "Expériences & Activités",
+    expList: ["Membre actif de clubs musicaux, sociaux et technologiques", "Participation à des compétitions de robotique", "Certificats en robotique et informatique"],
     languagesTitle: "Langues",
+    langList: ["Arabe (Maternel)", "Français (Bien)", "Anglais (Bien)"],
     projectsTitle: "Mes Projets",
     viewProject: "Voir sur GitHub",
+    project1Desc: "Application e-commerce inspirée de Shopify Collective, avec tableau de bord complet et gestion d'utilisateurs.",
+    project2Desc: "Collection de cuisine tunisienne présentant des plats traditionnels et modernes de toute la Tunisie.",
+    project3Desc: "Portfolio moderne et minimaliste avec mode sombre, animations 3D et intégration Supabase.",
     loading: "Chargement..."
   },
   ar: {
-    intro: "?????? ??? ?????",
-    title: "???\n????",
-    lead: "????? ??? ?? ???? ??????. ?? ????? ?? ??????? ??????? ?????? ????? ??????? ?? ?? ???.",
-    ctaProjects: "??? ???????",
-    ctaCv: "????? ?????? ???????",
-    navHome: "????????",
-    navLogin: "????? ?????",
-    loginTitle: "????? ?????",
-    loginDesc: "???? ??????? ????? ??????? ??? ??????.",
-    loginEmail: "????? ??????????",
-    loginPassword: "word ?????",
-    loginSubmit: "????? ?????",
-    aboutTitle: "?? ???",
-    educationTitle: "???????",
-    skillsTitle: "??????? ??????",
-    experienceTitle: "??????? ????????",
-    languagesTitle: "??????",
-    projectsTitle: "???????",
-    viewProject: "??? ??? GitHub",
-    loading: "???? ???????..."
+    navHome: "الرئيسية",
+    navLogin: "تسجيل الدخول",
+    intro: "أهلاً، أنا خيري،",
+    title: "أنا\nطالب",
+    lead: "طالب هندسة إعلامية متخصص في تطوير الويب والروبوتات.",
+    ctaProjects: "تصفح المشاريع",
+    ctaCv: "تحميل السيرة الذاتية",
+    loginTitle: "لوحة التحكم",
+    loginDesc: "قم بتسجيل الدخول لإدارة بياناتك وإعدادات قاعدة البيانات.",
+    loginEmail: "البريد الإلكتروني",
+    loginPassword: "كلمة المرور",
+    loginSubmit: "تسجيل الدخول",
+    aboutTitle: "من أنا",
+    aboutDesc: "طالب هندسة إعلامية متميز متخصص في تطوير الويب والروبوتات. متمرس في HTML، PHP، Python، و SQL مع شغف كبير ببناء حلول واقعية. عضو نشط في نوادي التكنولوجيا ومسابقات الروبوتات.",
+    educationTitle: "التعليم",
+    eduPlace: "ISIMG - المعهد العالي للإعلامية والملتيميديا بقابس",
+    eduSpec: "التخصص: هندسة تطوير الويب والروبوتات (LISI)",
+    eduDate: "بكالوريا (2023/2024) - معدل جيد",
+    skillsTitle: "المهارات التقنية",
+    skillsList: ["HTML, PHP, Python, SQL", "قواعد البيانات: MySQL, PostgreSQL", "تطوير الويب (الواجهات الأمامية والخلفية)"],
+    experienceTitle: "الخبرات والأنشطة",
+    expList: ["عضو نشط في نوادي الموسيقى، الاجتماع والتكنولوجيا", "مشارك في مسابقات الروبوتات الوطنية", "حاصل على شهادات في مجال الروبوتات والمعلوماتية"],
+    languagesTitle: "اللغات",
+    langList: ["العربية (اللغة الأم)", "الفرنسية (جيد)", "الإنجليزية (جيد)"],
+    projectsTitle: "مشاريعي",
+    viewProject: "عرض على GitHub",
+    project1Desc: "تطبيق تجارة إلكترونية مستوحى من Shopify Collective، يتميز بلوحة تحكم كاملة وإدارة المستخدمين.",
+    project2Desc: "مجموعة من المأكولات التونسية تضم أطباقًا تقليدية وحديثة من جميع أنحاء تونس.",
+    project3Desc: "بورتفوليو عصري وبسيط مع وضع مظلم، رسوم متحركة ثلاثية الأبعاد، وتكامل مع Supabase.",
+    loading: "جاري التحميل..."
   },
 };
+
 
 function App() {
   const [lang, setLang] = useState(localStorage.getItem("site_lang") || "en");
@@ -196,42 +227,36 @@ function App() {
           <div className="cv-grid">
             <div className="cv-card profile-card reveal">
               <h2>${t.aboutTitle}</h2>
-              <p>Motivated Computer Science student specializing in Web Development and Robotics. Skilled in HTML, PHP, Python, and SQL with a strong interest in building real-world solutions. Active in clubs and robotics competitions with strong teamwork and problem-solving skills.</p>
+              <p>${t.aboutDesc}</p>
             </div>
             
             <div className="cv-card education-card reveal">
               <h3>${t.educationTitle}</h3>
               <div className="cv-item">
-                <p className="item-title">ISIMG - Higher Institute of Computer Science and Multimedia of Gabès</p>
-                <p className="item-subtitle">Specialization: Web Development & Robotics Engineering (LISI)</p>
-                <p className="item-date">Baccalaureate (2023/2024) - Good average</p>
+                <p className="item-title">${t.eduPlace}</p>
+                <p className="item-subtitle">${t.eduSpec}</p>
+                <p className="item-date">${t.eduDate}</p>
               </div>
             </div>
 
             <div className="cv-card skills-card reveal">
               <h3>${t.skillsTitle}</h3>
               <ul className="skills-list">
-                <li>HTML, PHP, Python, SQL</li>
-                <li>Databases: MySQL, PostgreSQL</li>
-                <li>Web Development (Front-end & Back-end basics)</li>
+                ${t.skillsList.map(item => html`<li>${item}</li>`)}
               </ul>
             </div>
 
             <div className="cv-card experience-card reveal">
               <h3>${t.experienceTitle}</h3>
               <ul className="cv-list">
-                <li>Active member in music, social, and tech clubs</li>
-                <li>Participated in robotics competitions</li>
-                <li>Earned certificates in robotics and IT</li>
+                ${t.expList.map(item => html`<li>${item}</li>`)}
               </ul>
             </div>
 
             <div className="cv-card languages-card reveal">
               <h3>${t.languagesTitle}</h3>
               <div className="lang-items">
-                <span>Arabic (Native)</span>
-                <span>French (Good)</span>
-                <span>English (Good)</span>
+                ${t.langList.map(item => html`<span>${item}</span>`)}
               </div>
             </div>
           </div>
@@ -244,21 +269,21 @@ function App() {
           <div className="cv-grid projects-grid">
             <div className="cv-card project-card reveal">
               <h3>website-dropshoping-</h3>
-              <p>A web application inspired by Shopify Collective, featuring user authentication, admin dashboard, profile management, and resource navigation.</p>
+              <p>${t.project1Desc}</p>
               <div className="project-tags"><span>PHP</span></div>
               <a href="https://github.com/KHAIRIBO/website-dropshoping-" target="_blank" className="cta secondary mini">${t.viewProject}</a>
             </div>
 
             <div className="cv-card project-card reveal">
               <h3>dbrtna</h3>
-              <p>Tunisian cuisine collection 🇹🇳 featuring traditional and modern dishes. Discover famous foods like Couscous, Brik, and Lablabi.</p>
+              <p>${t.project2Desc}</p>
               <div className="project-tags"><span>JavaScript</span></div>
               <a href="https://github.com/KHAIRIBO/dbrtna" target="_blank" className="cta secondary mini">${t.viewProject}</a>
             </div>
 
             <div className="cv-card project-card reveal">
               <h3>khairibo</h3>
-              <p>Modern minimalist portfolio with dark mode, animations, and Supabase integration.</p>
+              <p>${t.project3Desc}</p>
               <div className="project-tags"><span>JavaScript</span><span>Node.js</span></div>
               <a href="https://github.com/KHAIRIBO/khairibo" target="_blank" className="cta secondary mini">${t.viewProject}</a>
             </div>
