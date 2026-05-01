@@ -5,42 +5,32 @@ import htm from "https://esm.sh/htm@3.1.1";
 const html = htm.bind(React.createElement);
 
 // Senior Data Fetching Helpers (Communicating via Server API)
+// Static Data (No longer communicating with server API)
 const api = {
-  fetchProjects: async () => {
-    const response = await fetch("/api/projects");
-    return await response.json();
-  },
-  fetchAbout: async () => {
-    const response = await fetch("/api/about");
-    const data = await response.json();
-    return data.error ? null : data;
-  },
-  fetchContacts: async () => {
-    const response = await fetch("/api/contacts");
-    return await response.json();
-  },
+  fetchProjects: async () => [
+    { id: 1, title: "Modern Portfolio", description: "A high-end Bento style portfolio design.", link: "#" },
+    { id: 2, title: "SaaS Dashboard", description: "A minimalist dashboard for SaaS platforms.", link: "#" },
+    { id: 3, title: "E-commerce App", description: "A full-featured shopping experience.", link: "#" }
+  ],
+  fetchAbout: async () => ({
+    bio: "I'm a passionate developer building modern web experiences with Node.js and React.",
+    skills: "JavaScript, Node.js, React, CSS, HTML5",
+    experience: "5+ years of web development",
+    education: "Bachelor's in Computer Science"
+  }),
+  fetchContacts: async () => [
+    { name: "Email", platform: "Email", url: "mailto:hello@example.com" },
+    { name: "LinkedIn", platform: "LinkedIn", url: "https://linkedin.com" }
+  ],
   submitContactForm: async (name, email, message) => {
-    const response = await fetch("/api/contact", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, message })
-    });
-    return await response.json();
+    console.log("Form submitted locally:", { name, email, message });
+    return { success: true };
   },
-  fetchContactSubmissions: async () => {
-    const response = await fetch("/api/admin/contact_submissions");
-    const payload = await response.json();
-    return payload.data || [];
-  },
-  deleteProject: async (id) => {
-    const response = await fetch(`/api/admin/projects/${id}`, { method: "DELETE" });
-    return await response.json();
-  },
-  deleteContactSubmission: async (id) => {
-    const response = await fetch(`/api/admin/contact_submissions/${id}`, { method: "DELETE" });
-    return await response.json();
-  }
+  fetchContactSubmissions: async () => [],
+  deleteProject: async () => ({ success: true }),
+  deleteContactSubmission: async () => ({ success: true })
 };
+
 
 const ADMIN_PASSWORD_KEY = "admin_password";
 const ADMIN_AUTH_KEY = "admin_authed";
@@ -320,250 +310,6 @@ function App() {
   const isAdminAuthed = localStorage.getItem(ADMIN_AUTH_KEY) === "1";
 
   const renderContent = () => {
-    if (route === "/projects") {
-      return html`
-        <main className="hero">
-          <div className="container">
-            <section className="page-card">
-              <h1>${t.projectsTitle}</h1>
-              <p>${t.projectsDesc}</p>
-              ${loading ? html`<p>${t.loading}</p>` : projects.length > 0 ? html`
-                <div className="projects-grid">
-                  ${projects.map((project) => html`
-                    <div className="project-item">
-                      <h3>${project.title}</h3>
-                      <p>${project.description}</p>
-                      ${project.link ? html`<a href=${project.link} target="_blank" rel="noopener noreferrer" className="cta secondary">View</a>` : null}
-                    </div>
-                  `)}
-                </div>
-              ` : html`<p>${t.noProjects}</p>`}
-              <div className="cta-row">
-                <button className="cta secondary" onClick=${() => navigate("/")}>${t.navHome}</button>
-              </div>
-            </section>
-          </div>
-        </main>
-      `;
-    }
-
-    if (route === "/about") {
-      return html`
-        <main className="hero">
-          <div className="container">
-            <section className="page-card">
-              <h1>${t.aboutTitle}</h1>
-              <p>${t.aboutDesc}</p>
-              ${loading ? html`<p>${t.loading}</p>` : about ? html`
-                <div>
-                  <p>${about.bio}</p>
-                  ${about.skills ? html`<p><strong>Skills:</strong> ${about.skills}</p>` : null}
-                </div>
-              ` : html`<p>No about information available.</p>`}
-              <div className="cta-row">
-                <button className="cta secondary" onClick=${() => navigate("/")}>${t.navHome}</button>
-              </div>
-            </section>
-          </div>
-        </main>
-      `;
-    }
-
-    if (route === "/contacts") {
-      return html`
-        <main className="hero">
-          <div className="container">
-            <section className="page-card">
-              <h1>${t.contactsTitle}</h1>
-              <p>${t.contactsDesc}</p>
-              <form onSubmit=${handleContactSubmit} className="contact-form">
-                <input
-                  type="text"
-                  placeholder=${t.contactName}
-                  value=${contactForm.name}
-                  onChange=${(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                  required
-                />
-                <input
-                  type="email"
-                  placeholder=${t.contactEmail}
-                  value=${contactForm.email}
-                  onChange=${(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                  required
-                />
-                <textarea
-                  placeholder=${t.contactMessage}
-                  value=${contactForm.message}
-                  onChange=${(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                  rows="5"
-                  required
-                ></textarea>
-                <button type="submit" className="cta" disabled=${loading}>${t.contactSend}</button>
-              </form>
-              ${formStatus ? html`<p className="status-text">${formStatus}</p>` : null}
-              <div className="cta-row">
-                <button className="cta secondary" onClick=${() => navigate("/")}>${t.navHome}</button>
-              </div>
-            </section>
-          </div>
-        </main>
-      `;
-    }
-
-    if (route === "/data") {
-      return html`
-        <main className="hero">
-          <div className="container">
-            <section className="page-card">
-              <h1>${t.dataTitle}</h1>
-              <p>${t.dataDesc}</p>
-              <p>Password key: <strong>${ADMIN_PASSWORD_KEY}</strong></p>
-              <p>Current test password: <strong>${DEFAULT_TEST_PASSWORD}</strong></p>
-              <div className="cta-row">
-                <button className="cta" onClick=${saveTestPassword}>${t.dataSave}</button>
-                <button className="cta secondary" onClick=${() => navigate("/")}>${t.navHome}</button>
-              </div>
-              ${statusText ? html`<p className="status-text">${statusText}</p>` : null}
-            </section>
-          </div>
-        </main>
-      `;
-    }
-
-    if (route === "/admin") {
-      if (!isAdminAuthed) {
-        navigate("/");
-        return null;
-      }
-
-      return html`
-        <main className="hero">
-          <div className="container">
-            <section className="admin-dashboard">
-              <h1>${t.adminTitle}</h1>
-              <p>${t.adminDesc}</p>
-              
-              <div className="admin-tabs">
-                <button className=${`admin-tab ${adminTab === "projects" ? "active" : ""}`} onClick=${() => setAdminTab("projects")}>Projects</button>
-                <button className=${`admin-tab ${adminTab === "about" ? "active" : ""}`} onClick=${() => setAdminTab("about")}>About</button>
-                <button className=${`admin-tab ${adminTab === "contacts" ? "active" : ""}`} onClick=${() => setAdminTab("contacts")}>Contacts</button>
-                <button className=${`admin-tab ${adminTab === "submissions" ? "active" : ""}`} onClick=${() => setAdminTab("submissions")}>Submissions</button>
-              </div>
-
-              <div className="admin-content">
-                ${adminTab === "projects" ? html`
-                  <div>
-                    <h2>Projects (${projects.length})</h2>
-                    ${loading ? html`<p>${t.loading}</p>` : projects.length > 0 ? html`
-                      <table className="data-table">
-                        <thead>
-                          <tr>
-                            <th>Title</th>
-                            <th>Category</th>
-                            <th>Link</th>
-                            <th>Created</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          ${projects.map(p => html`
-                            <tr>
-                              <td>${p.title}</td>
-                              <td>${p.category || "—"}</td>
-                              <td>${p.link ? html`<a href=${p.link} target="_blank">View</a>` : "—"}</td>
-                              <td>${new Date(p.created_at).toLocaleDateString()}</td>
-                              <td><button className="btn-delete" onClick=${() => handleDeleteProject(p.id)}>Delete</button></td>
-                            </tr>
-                          `)}
-                        </tbody>
-                      </table>
-                    ` : html`<p>No projects</p>`}
-                  </div>
-                ` : ""}
-
-                ${adminTab === "about" ? html`
-                  <div>
-                    <h2>About</h2>
-                    ${loading ? html`<p>${t.loading}</p>` : about ? html`
-                      <div className="info-box">
-                        <p><strong>Bio:</strong> ${about.bio}</p>
-                        <p><strong>Skills:</strong> ${about.skills}</p>
-                        <p><strong>Experience:</strong> ${about.experience}</p>
-                        <p><strong>Education:</strong> ${about.education}</p>
-                      </div>
-                    ` : html`<p>No about info</p>`}
-                  </div>
-                ` : ""}
-
-                ${adminTab === "contacts" ? html`
-                  <div>
-                    <h2>Contact Links (${contacts.length})</h2>
-                    ${loading ? html`<p>${t.loading}</p>` : contacts.length > 0 ? html`
-                      <table className="data-table">
-                        <thead>
-                          <tr>
-                            <th>Name</th>
-                            <th>Platform</th>
-                            <th>URL</th>
-                            <th>Created</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          ${contacts.map(c => html`
-                            <tr>
-                              <td>${c.name}</td>
-                              <td>${c.platform}</td>
-                              <td>${c.url ? html`<a href=${c.url} target="_blank">Link</a>` : "—"}</td>
-                              <td>${new Date(c.created_at).toLocaleDateString()}</td>
-                            </tr>
-                          `)}
-                        </tbody>
-                      </table>
-                    ` : html`<p>No contacts</p>`}
-                  </div>
-                ` : ""}
-
-                ${adminTab === "submissions" ? html`
-                  <div>
-                    <h2>Contact Form Submissions (${contactSubmissions.length})</h2>
-                    ${loading ? html`<p>${t.loading}</p>` : contactSubmissions.length > 0 ? html`
-                      <table className="data-table">
-                        <thead>
-                          <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Message</th>
-                            <th>Date</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          ${contactSubmissions.map(s => html`
-                            <tr>
-                              <td>${s.name}</td>
-                              <td>${s.email}</td>
-                              <td>${s.message.substring(0, 50)}...</td>
-                              <td>${new Date(s.created_at).toLocaleDateString()}</td>
-                              <td><button className="btn-delete" onClick=${() => handleDeleteSubmission(s.id)}>Delete</button></td>
-                            </tr>
-                          `)}
-                        </tbody>
-                      </table>
-                    ` : html`<p>No submissions</p>`}
-                  </div>
-                ` : ""}
-              </div>
-
-              <div className="cta-row admin-actions">
-                <button className="cta" onClick=${logout}>${t.logout}</button>
-                <button className="cta secondary" onClick=${() => navigate("/")}>${t.navHome}</button>
-              </div>
-            </section>
-          </div>
-        </main>
-      `;
-    }
-
     return html`
       <main className="hero">
         <div className="container hero-grid">
@@ -572,8 +318,8 @@ function App() {
             <h1 className="title">${t.title.split("\n").map((line, idx, arr) => html`${line}${idx < arr.length - 1 ? html`<br />` : null}`)}</h1>
             <p className="lead">${t.lead}</p>
             <div className="cta-row">
-              <button className="cta" onClick=${() => navigate("/projects")}>${t.ctaProjects}</button>
-              <button className="cta secondary" onClick=${() => navigate("/data")}>${t.ctaCv}</button>
+              <button className="cta" onClick=${() => alert("Projects clicked")}>${t.ctaProjects}</button>
+              <button className="cta secondary" onClick=${() => alert("CV clicked")}>${t.ctaCv}</button>
             </div>
           </section>
           <figure className="hero-image" aria-hidden="true">
@@ -588,16 +334,13 @@ function App() {
     <div>
       <header className="site-header">
         <div className="container header-inner">
-          <a className="logo" href="#" onClick=${onLogoClick}
+          <a className="logo" href="#" onClick=${(e) => e.preventDefault()}
             >khairi<span className="logo-accent">bouzakher</span></a
           >
 
           <div className="header-right">
             <nav className="main-nav" aria-label="Main navigation">
-              <a href="#" onClick=${(e) => { e.preventDefault(); navigate("/"); }}>${t.navHome}</a>
-              <a href="#" onClick=${(e) => { e.preventDefault(); navigate("/projects"); }}>${t.navProjects}</a>
-              <a href="#" onClick=${(e) => { e.preventDefault(); navigate("/about"); }}>${t.navAbout}</a>
-              <a href="#" onClick=${(e) => { e.preventDefault(); navigate("/contacts"); }}>${t.navContacts}</a>
+              <a href="#" onClick=${(e) => { e.preventDefault(); }}>${t.navHome}</a>
             </nav>
 
             <div className="header-controls">
@@ -621,3 +364,4 @@ function App() {
 }
 
 createRoot(document.getElementById("root")).render(html`<${App} />`);
+
