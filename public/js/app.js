@@ -320,7 +320,27 @@ function App() {
             <div className="cta-row">
               <button className="cta" onClick=${() => alert("Projects clicked")}>${t.ctaProjects}</button>
               <button className="cta secondary" onClick=${() => alert("CV clicked")}>${t.ctaCv}</button>
+              <button className="cta secondary" onClick=${async () => {
+                try {
+                  const res = await fetch("/api/db-test");
+                  const data = await res.json();
+                  alert(data.success ? `DB Connected! Server time: ${data.time}` : `DB Error: ${data.error}`);
+                } catch (e) {
+                  alert("Failed to connect to DB API");
+                }
+              }}>Test Database</button>
+              <button className="cta secondary" onClick=${async () => {
+                try {
+                  const res = await fetch("/api/supabase-test");
+                  const data = await res.json();
+                  alert(data.success ? `Supabase Connected! (Status: ${data.error || "OK"})` : `Supabase Error: ${data.error}`);
+                } catch (e) {
+                  alert("Failed to connect to Supabase API");
+                }
+              }}>Test Supabase</button>
             </div>
+
+
           </section>
           <figure className="hero-image" aria-hidden="true">
             <img src="photo/khairibo.png" alt="Avatar" />
