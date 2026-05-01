@@ -134,11 +134,23 @@ function App() {
     localStorage.setItem("site_lang", lang);
   }, [lang]);
 
+  const [repos, setRepos] = useState([]);
+
   useEffect(() => {
     fetch("/api/db-status")
       .then(res => res.json())
       .then(data => setDbConnected(data.connected))
       .catch(() => setDbConnected(false));
+
+    // Dynamic GitHub Fetch
+    fetch("https://api.github.com/users/KHAIRIBO/repos?sort=updated&per_page=6")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setRepos(data.filter(r => r.name !== "khairibo" && r.name !== "-"));
+        }
+      })
+      .catch(e => console.error("GitHub fetch failed", e));
   }, []);
 
   useEffect(() => {
@@ -267,26 +279,20 @@ function App() {
         <div className="container">
           <h2 className="section-title reveal">${t.projectsTitle}</h2>
           <div className="cv-grid projects-grid">
-            <div className="cv-card project-card reveal">
-              <h3>website-dropshoping-</h3>
-              <p>${t.project1Desc}</p>
-              <div className="project-tags"><span>PHP</span></div>
-              <a href="https://github.com/KHAIRIBO/website-dropshoping-" target="_blank" className="cta secondary mini">${t.viewProject}</a>
-            </div>
-
-            <div className="cv-card project-card reveal">
-              <h3>dbrtna</h3>
-              <p>${t.project2Desc}</p>
-              <div className="project-tags"><span>JavaScript</span></div>
-              <a href="https://github.com/KHAIRIBO/dbrtna" target="_blank" className="cta secondary mini">${t.viewProject}</a>
-            </div>
-
-            <div className="cv-card project-card reveal">
-              <h3>khairibo</h3>
-              <p>${t.project3Desc}</p>
-              <div className="project-tags"><span>JavaScript</span><span>Node.js</span></div>
-              <a href="https://github.com/KHAIRIBO/khairibo" target="_blank" className="cta secondary mini">${t.viewProject}</a>
-            </div>
+            ${repos.length > 0 ? repos.map(repo => html`
+              <div key=${repo.id} className="cv-card project-card reveal active">
+                <div className="project-icon">
+                  <i className="fa-brands fa-github"></i>
+                </div>
+                <h3>${repo.name}</h3>
+                <p>${repo.description || "Project created by Khairi Bouzakher."}</p>
+                <div className="project-tags">
+                  ${repo.language ? html`<span>${repo.language}</span>` : ""}
+                  <span>⭐ ${repo.stargazers_count}</span>
+                </div>
+                <a href=${repo.html_url} target="_blank" className="cta secondary mini">${t.viewProject}</a>
+              </div>
+            `) : html`<p className="loading-text">${t.loading}</p>`}
           </div>
         </div>
       </section>

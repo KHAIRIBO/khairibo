@@ -313,7 +313,20 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-.project-card h3 { color: var(--caramel); margin-bottom: 12px; }
+.project-card h3 { color: var(--caramel); margin-bottom: 12px; font-size: 22px; }
+.project-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--caramel);
+  margin-bottom: 20px;
+}
+.loading-text { text-align: center; color: var(--muted); width: 100%; grid-column: span 3; padding: 40px; }
 .project-tags { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
 .project-tags span { 
   font-size: 11px; 
