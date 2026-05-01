@@ -36,6 +36,8 @@ const translations = {
     langList: ["Arabic (Native)", "French (Good)", "English (Good)"],
     projectsTitle: "My Projects",
     viewProject: "View on GitHub",
+    featuredTitle: "Featured Project",
+    edropoDesc: "Edropo - The Smart E-commerce System. Launch your dropshipping business with winning products, AI-powered insights, and a proven 90-day growth roadmap.",
     project1Desc: "E-commerce web application inspired by Shopify Collective, featuring full admin dashboard and user management.",
     project2Desc: "Tunisian cuisine collection featuring traditional and modern dishes from across Tunisia.",
     project3Desc: "Modern minimalist portfolio with dark mode, 3D animations, and Supabase integration.",
@@ -68,6 +70,8 @@ const translations = {
     langList: ["Arabe (Maternel)", "Français (Bien)", "Anglais (Bien)"],
     projectsTitle: "Mes Projets",
     viewProject: "Voir sur GitHub",
+    featuredTitle: "Projet Phare",
+    edropoDesc: "Edropo - Le Système E-commerce Intelligent. Lancez votre business de dropshipping avec des produits gagnants et des outils IA.",
     project1Desc: "Application e-commerce inspirée de Shopify Collective, avec tableau de bord complet et gestion d'utilisateurs.",
     project2Desc: "Collection de cuisine tunisienne présentant des plats traditionnels et modernes de toute la Tunisie.",
     project3Desc: "Portfolio moderne et minimaliste avec mode sombre, animations 3D et intégration Supabase.",
@@ -100,6 +104,8 @@ const translations = {
     langList: ["العربية (اللغة الأم)", "الفرنسية (جيد)", "الإنجليزية (جيد)"],
     projectsTitle: "مشاريعي",
     viewProject: "عرض على GitHub",
+    featuredTitle: "المشروع الأبرز",
+    edropoDesc: "Edropo - النظام الذكي للتجارة الإلكترونية. ابدأ عملك في التجارة الإلكترونية مع منتجات رابحة وأدوات مدعومة بالذكاء الاصطناعي.",
     project1Desc: "تطبيق تجارة إلكترونية مستوحى من Shopify Collective، يتميز بلوحة تحكم كاملة وإدارة المستخدمين.",
     project2Desc: "مجموعة من المأكولات التونسية تضم أطباقًا تقليدية وحديثة من جميع أنحاء تونس.",
     project3Desc: "بورتفوليو عصري وبسيط مع وضع مظلم، رسوم متحركة ثلاثية الأبعاد، وتكامل مع Supabase.",
@@ -278,6 +284,31 @@ function App() {
       <section className="cv-section projects-section">
         <div className="container">
           <h2 className="section-title reveal">${t.projectsTitle}</h2>
+          
+          <div className="featured-project reveal active">
+            <div className="featured-badge">${t.featuredTitle}</div>
+            <div className="featured-grid">
+              <div className="featured-content">
+                <div className="project-icon">
+                  <i className="fa-solid fa-rocket"></i>
+                </div>
+                <h3>Edropo</h3>
+                <p>${t.edropoDesc}</p>
+                <div className="project-tags">
+                  <span>SaaS</span>
+                  <span>AI</span>
+                  <span>E-commerce</span>
+                </div>
+                <div className="cta-row">
+                  <a href="https://edropo.com" target="_blank" className="cta mini">Visit Website</a>
+                </div>
+              </div>
+              <div className="featured-image">
+                <img src="/edropo_mockup_1777679714128.png" alt="Edropo Dashboard" />
+              </div>
+            </div>
+          </div>
+
           <div className="cv-grid projects-grid">
             ${repos.length > 0 ? repos.map(repo => html`
               <div key=${repo.id} className="cv-card project-card reveal active">
