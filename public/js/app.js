@@ -3,11 +3,26 @@ import { createRoot } from "https://esm.sh/react-dom@18.3.1/client";
 import htm from "https://esm.sh/htm@3.1.1";
 import { inject } from "https://esm.sh/@vercel/analytics";
 import { motion, AnimatePresence } from "https://esm.sh/framer-motion@11.1.7";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.42.0";
 
 inject();
 
 
 const html = htm.bind(React.createElement);
+
+let supabase;
+const initSupabase = async () => {
+  try {
+    const res = await fetch("/api/config");
+    const config = await res.json();
+    if (config.supabaseUrl && config.supabaseKey) {
+      supabase = createClient(config.supabaseUrl, config.supabaseKey);
+      return supabase;
+    }
+  } catch (err) {
+    console.error("Failed to init Supabase client", err);
+  }
+};
 
 const translations = {
   en: {
@@ -42,7 +57,18 @@ const translations = {
     project1Desc: "E-commerce web application inspired by Shopify Collective, featuring full admin dashboard and user management.",
     project2Desc: "Tunisian cuisine collection featuring traditional and modern dishes from across Tunisia.",
     project3Desc: "Modern minimalist portfolio with dark mode, 3D animations, and Supabase integration.",
-    loading: "Loading..."
+    loading: "Loading...",
+    navBlog: "Blog",
+    blogTitle: "My Blog",
+    readMore: "Read More",
+    backToBlog: "Back to Blog",
+    noBlogs: "No blog posts found yet. Check back soon!",
+    navDashboard: "Dashboard",
+    dashTitle: "User Dashboard",
+    dashWelcome: "Welcome back,",
+    dashProfile: "Profile Information",
+    dashStats: "Quick Stats",
+    dashSettings: "Settings"
   },
   fr: {
     navHome: "Accueil",
@@ -121,6 +147,12 @@ function App() {
   const [route, setRoute] = useState(window.location.pathname || "/");
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [user, setUser] = useState(null);
+  const [blogs, setBlogs] = useState([]);
+  const [selectedBlog, setSelectedBlog] = useState(null);
+  const [logoClicks, setLogoClicks] = useState(0);
+  const [showAdminAuth, setShowAdminAuth] = useState(false);
+  const [adminCode, setAdminCode] = useState("");
+  const [isAdmin, setIsAdmin] = useState(localStorage.getItem("is_admin") === "true");
 
   const t = useMemo(() => translations[lang] || translations.en, [lang]);
 
@@ -173,6 +205,14 @@ function App() {
         }
       })
       .catch(e => console.error("GitHub fetch failed", e));
+
+    // Fetch Blogs
+    fetch("/api/blogs")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setBlogs(data);
+      })
+      .catch(err => console.error("Blog fetch failed", err));
   }, []);
 
   useEffect(() => {
@@ -192,11 +232,79 @@ function App() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    // For demo purposes, we'll just check if email exists. 
-    // In production, this would call a Supabase Auth API.
     if (loginForm.email && loginForm.password) {
+      // Basic login for demo, you could also use supabase.auth.signInWithPassword
       setUser({ email: loginForm.email });
       navigate("/");
+    }
+  };
+
+  const handleGoogleLogin = () => {
+    window.location.href = "/auth/google";
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout");
+      setUser(null);
+      navigate("/");
+    } catch (err) {
+      console.error("Logout failed", err);
+    }
+  };
+
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const res = await fetch("/api/user");
+        const data = await res.json();
+        if (data.user) {
+          // Flatten user object if it comes from Passport profile
+          const userObj = {
+            email: data.user.emails ? data.user.emails[0].value : data.user.email,
+            displayName: data.user.displayName
+          };
+          setUser(userObj);
+        }
+      } catch (err) {
+        console.error("Session check failed", err);
+      }
+    };
+    checkUser();
+    
+    initSupabase();
+  }, []);
+
+  // Auth Protection for Dashboard
+  useEffect(() => {
+    if (route === "/dashboard" && !user) {
+      navigate("/login");
+    }
+  }, [route, user]);
+
+  const handleLogoClick = (e) => {
+    e.preventDefault();
+    const newCount = logoClicks + 1;
+    setLogoClicks(newCount);
+    if (newCount === 3) {
+      setShowAdminAuth(true);
+      setLogoClicks(0);
+    } else {
+      navigate("/");
+    }
+  };
+
+  const verifyAdminCode = (e) => {
+    e.preventDefault();
+    if (adminCode === "6cc4aca9df") {
+      setIsAdmin(true);
+      localStorage.setItem("is_admin", "true");
+      setShowAdminAuth(false);
+      setAdminCode("");
+      navigate("/admin");
+    } else {
+      alert("Invalid Code");
+      setAdminCode("");
     }
   };
 
@@ -225,10 +333,172 @@ function App() {
                 />
                 <button type="submit" className="cta">${t.loginSubmit}</button>
               </form>
-              <div className="cta-row">
+
+              <div className="divider">OR</div>
+
+              <button className="google-btn" onClick=${handleGoogleLogin}>
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
+                Sign in with Google
+              </button>
+
+              <div className="cta-row" style=${{ marginTop: '24px' }}>
                 <button className="cta secondary" onClick=${() => navigate("/")}>${t.navHome}</button>
               </div>
             </section>
+          </div>
+        </main>
+      `;
+    }
+
+    if (route === "/blog") {
+      return html`
+        <main className="hero">
+          <div className="container">
+            <header className="page-header">
+              <h1 className="title text-center mb-12">${t.blogTitle}</h1>
+            </header>
+            
+            <div className="blog-grid">
+              ${blogs.length > 0 
+                ? blogs.map(blog => html`
+                    <${motion.article} 
+                      key=${blog.id}
+                      initial=${{ opacity: 0, y: 20 }}
+                      animate=${{ opacity: 1, y: 0 }}
+                      className="blog-card"
+                      onClick=${() => { setSelectedBlog(blog); navigate(`/blog/${blog.id}`); }}
+                    >
+                      <div className="blog-image">
+                        <img src=${blog.image_url || 'https://via.placeholder.com/400x250'} alt=${blog.title} />
+                      </div>
+                      <div className="blog-body">
+                        <span className="blog-date">${new Date(blog.created_at).toLocaleDateString()}</span>
+                        <h3>${blog.title}</h3>
+                        <p>${blog.excerpt}</p>
+                        <button className="read-more-btn">${t.readMore} <i className="fa-solid fa-arrow-right-long"></i></button>
+                      </div>
+                    </${motion.article}>
+                  `)
+                : html`<div className="col-span-full text-center py-20 opacity-50">${t.noBlogs}</div>`
+              }
+            </div>
+          </div>
+        </main>
+      `;
+    }
+
+    if (route === "/dashboard" && user) {
+      return html`
+        <main className="dashboard-page hero">
+          <div className="container">
+            <header className="dash-header mb-12">
+              <h1 className="title">${t.dashTitle}</h1>
+              <p className="lead">${t.dashWelcome} <strong>${user.displayName || user.email.split('@')[0]}</strong></p>
+            </header>
+
+            <div className="dash-grid">
+              <div className="dash-card profile-info-card">
+                <h3><i className="fa-solid fa-user-circle mr-2"></i> ${t.dashProfile}</h3>
+                <div className="profile-details">
+                  <img src=${user.photos ? user.photos[0].value : 'https://via.placeholder.com/100'} className="dash-avatar" />
+                  <div className="details">
+                    <p><strong>Name:</strong> ${user.displayName || 'N/A'}</p>
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p><strong>Provider:</strong> Google OAuth</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="dash-card stats-card">
+                <h3><i className="fa-solid fa-chart-line mr-2"></i> ${t.dashStats}</h3>
+                <div className="stats-row">
+                  <div className="stat-item">
+                    <span className="stat-value">${repos.length}</span>
+                    <span className="stat-label">Projects</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-value">${blogs.length}</span>
+                    <span className="stat-label">Posts</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-value">Elite</span>
+                    <span className="stat-label">Rank</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="dash-card settings-preview-card">
+                <h3><i className="fa-solid fa-cog mr-2"></i> ${t.dashSettings}</h3>
+                <p className="opacity-50 mb-6">Manage your account settings and preferences.</p>
+                <button className="cta secondary w-full">Edit Profile</button>
+                <button className="cta secondary w-full mt-3" onClick=${handleLogout}>Sign Out</button>
+              </div>
+            </div>
+          </div>
+        </main>
+      `;
+    }
+
+    if (route === "/admin" && isAdmin) {
+      return html`
+        <main className="admin-page hero">
+          <div className="container">
+            <header className="page-header mb-12 flex justify-between items-center">
+              <div>
+                <h1 className="title">Admin Panel</h1>
+                <p className="lead text-caramel font-bold">System Override Active</p>
+              </div>
+              <button className="cta secondary" onClick=${() => { setIsAdmin(false); localStorage.removeItem("is_admin"); navigate("/"); }}>Deactivate</button>
+            </header>
+
+            <div className="admin-grid">
+              <div className="dash-card">
+                <h3>Content Management</h3>
+                <div className="admin-actions">
+                  <button className="cta w-full mb-3" onClick=${() => alert("Add Blog coming soon!")}>Add New Blog Post</button>
+                  <button className="cta secondary w-full">Manage Projects</button>
+                </div>
+              </div>
+
+              <div className="dash-card">
+                <h3>System Logs</h3>
+                <div className="logs-view bg-black/40 rounded-xl p-4 font-mono text-xs h-40 overflow-y-auto">
+                  <p className="text-green-400">[SYSTEM]: Admin Authenticated</p>
+                  <p className="text-blue-400">[FETCH]: Supabase connection stable</p>
+                  <p className="text-purple-400">[LOG]: User session verified</p>
+                  <p className="text-gray-500">[IDLE]: Awaiting commands...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      `;
+    }
+
+    if (route.startsWith("/blog/")) {
+      const blog = selectedBlog || blogs.find(b => b.id.toString() === route.split("/")[2]);
+      if (!blog) return html`<div className="container py-40 text-center">${t.loading}</div>`;
+
+      return html`
+        <main className="blog-post-page">
+          <div className="container">
+            <button className="cta secondary mb-8" onClick=${() => navigate("/blog")}>
+              <i className="fa-solid fa-arrow-left-long mr-2"></i> ${t.backToBlog}
+            </button>
+            
+            <article className="blog-content page-card">
+              <div className="blog-post-header">
+                <span className="blog-date">${new Date(blog.created_at).toLocaleDateString()}</span>
+                <h1>${blog.title}</h1>
+                <div className="post-meta">By ${blog.author || 'Khairi'}</div>
+              </div>
+              
+              <div className="blog-post-image">
+                <img src=${blog.image_url || 'https://via.placeholder.com/1200x600'} alt=${blog.title} />
+              </div>
+              
+              <div className="blog-post-body" dangerouslySetInnerHTML=${{ __html: blog.content }}></div>
+            </article>
           </div>
         </main>
       `;
@@ -255,6 +525,12 @@ function App() {
               src="photo/khairibo.png" 
               alt="Avatar" 
               style=${{ rotateY: mousePos.x * 0.5, rotateX: mousePos.y * -0.5 }}
+              animate=${{ y: [0, -15, 0] }}
+              transition=${{ 
+                duration: 5, 
+                repeat: Infinity, 
+                ease: "easeInOut" 
+              }}
             />
           </figure>
         </div>
@@ -415,20 +691,38 @@ function App() {
     <div>
       <header className="site-header">
         <div className="container header-inner">
-          <a className="logo" href="#" onClick=${(e) => { e.preventDefault(); navigate("/"); }}
-            >khairi<span className="logo-accent">bouzakher</span></a
+          <${motion.a} 
+            className="logo" 
+            href="#" 
+            onClick=${handleLogoClick}
+            whileHover=${{ scale: 1.05, filter: "brightness(1.2)" }}
+            whileTap=${{ scale: 0.95 }}
+            transition=${{ type: "spring", stiffness: 400, damping: 17 }}
           >
+            khairi<${motion.span} 
+              className="logo-accent"
+              animate=${{ 
+                color: ["#a0a0ab", "#6366f1", "#a0a0ab"],
+                textShadow: ["0 0 0px rgba(99,102,241,0)", "0 0 10px rgba(99,102,241,0.3)", "0 0 0px rgba(99,102,241,0)"]
+              }}
+              transition=${{ 
+                duration: 4, 
+                repeat: Infinity, 
+                ease: "easeInOut" 
+              }}
+            >bouzakher</${motion.span}>
+          </${motion.a}>
 
           <div className="header-right">
-            <div className="db-status-pill" title="Database Connection Status">
-               <span className=${`status-dot ${dbConnected === true ? "online" : dbConnected === false ? "offline" : "checking"}`}></span>
-               <span className="status-text">${dbConnected === true ? "DB Online" : dbConnected === false ? "DB Offline" : "Checking..."}</span>
-            </div>
 
             <nav className="main-nav" aria-label="Main navigation">
               <a href="#" onClick=${(e) => { e.preventDefault(); navigate("/"); }}>${t.navHome}</a>
+              <a href="#" onClick=${(e) => { e.preventDefault(); navigate("/blog"); }}>${t.navBlog}</a>
               ${user 
-                ? html`<a href="#" onClick=${(e) => { e.preventDefault(); setUser(null); }}>Logout</a>`
+                ? html`
+                    <a href="#" onClick=${(e) => { e.preventDefault(); navigate("/dashboard"); }}>${t.navDashboard}</a>
+                    <a href="#" onClick=${(e) => { e.preventDefault(); handleLogout(); }}>Logout</a>
+                  `
                 : html`<a href="#" onClick=${(e) => { e.preventDefault(); navigate("/login"); }}>${t.navLogin}</a>`
               }
             </nav>
@@ -444,7 +738,50 @@ function App() {
         </div>
       </header>
 
-      ${renderContent()}
+      <${AnimatePresence} mode="wait">
+        <${motion.div}
+          key=${route}
+          initial=${{ opacity: 0, y: 10 }}
+          animate=${{ opacity: 1, y: 0 }}
+          exit=${{ opacity: 0, y: -10 }}
+          transition=${{ duration: 0.3, ease: "easeOut" }}
+        >
+          ${renderContent()}
+        </${motion.div}>
+      </${AnimatePresence}>
+
+      <${AnimatePresence}>
+        ${showAdminAuth && html`
+          <${motion.div} 
+            initial=${{ opacity: 0 }}
+            animate=${{ opacity: 1 }}
+            exit=${{ opacity: 0 }}
+            className="admin-modal-overlay"
+          >
+            <${motion.div} 
+              initial=${{ scale: 0.9, y: 20 }}
+              animate=${{ scale: 1, y: 0 }}
+              className="admin-modal"
+            >
+              <h2>Authorization Required</h2>
+              <p>Enter the security override code</p>
+              <form onSubmit=${verifyAdminCode}>
+                <input 
+                  type="password" 
+                  autoFocus
+                  placeholder="Secret Code" 
+                  value=${adminCode} 
+                  onChange=${(e) => setAdminCode(e.target.value)} 
+                />
+                <div className="modal-actions">
+                  <button type="button" className="cta secondary" onClick=${() => setShowAdminAuth(false)}>Cancel</button>
+                  <button type="submit" className="cta">Authorize</button>
+                </div>
+              </form>
+            </${motion.div}>
+          </${motion.div}>
+        `}
+      </${AnimatePresence}>
 
       <footer className="site-footer">
         <div className="container">&copy; ${new Date().getFullYear()} khairi bouzakher</div>

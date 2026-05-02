@@ -11,11 +11,27 @@
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.105.1",
     "@vercel/analytics": "^2.0.1",
-    "dotenv": "^16.0.0",
-    "express": "^4.18.0",
-    "framer-motion": "^12.38.0"
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "express-session": "^1.19.0",
+    "framer-motion": "^12.38.0",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0"
   },
   "engines": {
     "node": ">=18.x"
-  }
+  },
+  "description": "A minimalist, high-end portfolio built with Node.js, Express, and React (via esm.sh).",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KHAIRIBO/khairibo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/KHAIRIBO/khairibo/issues"
+  },
+  "homepage": "https://github.com/KHAIRIBO/khairibo#readme"
 }
