@@ -304,8 +304,9 @@ function App() {
                 </div>
               </div>
               <div className="featured-image">
-                <img src="/edropo_mockup_1777679714128.png" alt="Edropo Dashboard" />
+                <img src="/photo/image.png" alt="Edropo Dashboard" />
               </div>
+
             </div>
           </div>
 
