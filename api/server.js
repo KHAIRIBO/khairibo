@@ -53,6 +53,38 @@ app.use(express.json());
 app.use(session({ secret: process.env.SESSION_SECRET || "kbo-secret", resave: false, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
+// Dynamic sitemap — must come BEFORE express.static
+app.get("/sitemap.xml", (req, res) => {
+  const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+  const host = req.headers["x-forwarded-host"] || req.get("host");
+  const base = `${protocol}://${host}`;
+  const today = new Date().toISOString().split("T")[0];
+  const urls = [
+    { loc: `${base}/`,     changefreq: "weekly", priority: "1.0" },
+    { loc: `${base}/blog`, changefreq: "weekly", priority: "0.8" },
+  ];
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.map(u => `  <url>
+    <loc>${u.loc}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${u.changefreq}</changefreq>
+    <priority>${u.priority}</priority>
+  </url>`).join("\n")}
+</urlset>`;
+  res.header("Content-Type", "application/xml");
+  res.send(xml);
+});
+
+// Dynamic robots.txt — must come BEFORE express.static
+app.get("/robots.txt", (req, res) => {
+  const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+  const host = req.headers["x-forwarded-host"] || req.get("host");
+  const base = `${protocol}://${host}`;
+  res.header("Content-Type", "text/plain");
+  res.send(`User-agent: *\nAllow: /\nDisallow: /dashboard\nDisallow: /admin\n\nSitemap: ${base}/sitemap.xml\n`);
+});
+
 app.use(express.static(path.join(__dirname, "..", "public")));
 
 // Auth Routes
@@ -151,47 +183,6 @@ app.get("/api/db-test", async (req, res) => {
   }
 });
 
-// Dynamic sitemap — uses actual request domain so URLs always match
-app.get("/sitemap.xml", (req, res) => {
-  const protocol = req.headers["x-forwarded-proto"] || req.protocol;
-  const host = req.headers["x-forwarded-host"] || req.get("host");
-  const base = `${protocol}://${host}`;
-  const today = new Date().toISOString().split("T")[0];
-
-  const urls = [
-    { loc: `${base}/`,         changefreq: "weekly",  priority: "1.0" },
-    { loc: `${base}/blog`,     changefreq: "weekly",  priority: "0.8" },
-  ];
-
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map(u => `  <url>
-    <loc>${u.loc}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>${u.changefreq}</changefreq>
-    <priority>${u.priority}</priority>
-  </url>`).join("\n")}
-</urlset>`;
-
-  res.header("Content-Type", "application/xml");
-  res.send(xml);
-});
-
-// Dynamic robots.txt
-app.get("/robots.txt", (req, res) => {
-  const protocol = req.headers["x-forwarded-proto"] || req.protocol;
-  const host = req.headers["x-forwarded-host"] || req.get("host");
-  const base = `${protocol}://${host}`;
-
-  res.header("Content-Type", "text/plain");
-  res.send(`User-agent: *
-Allow: /
-Disallow: /dashboard
-Disallow: /admin
-
-Sitemap: ${base}/sitemap.xml
-`);
-});
 
 // SPA fallback
 app.get("*", (req, res) => {
