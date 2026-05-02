@@ -293,6 +293,19 @@ body {
   box-shadow: 0 10px 20px rgba(0,0,0,0.1);
 }
 
+.google-btn.header-google-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  margin: 0;
+  border-radius: 8px;
+  gap: 8px;
+}
+
+.google-btn.header-google-btn img {
+  width: 14px;
+  height: 14px;
+}
+
 .google-btn img {
   width: 20px;
   height: 20px;
