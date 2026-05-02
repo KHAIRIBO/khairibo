@@ -301,97 +301,73 @@ function App() {
         </div>
       </section>
 
-      <section ref=${projectsRef} className="py-32 relative overflow-hidden bg-[#030303]">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-caramel/10 blur-[120px] rounded-full -z-10 opacity-50"></div>
-        
-        <div className="container mx-auto px-6 relative z-10">
-          <motion.div 
-            initial=${{ opacity: 0, y: 20 }}
-            whileInView=${{ opacity: 1, y: 0 }}
-            className="text-center mb-24"
-          >
-            <h2 className="text-6xl md:text-7xl font-black tracking-tighter text-white mb-4">
-              Featured <span className="text-caramel">Work</span>
-            </h2>
-            <div className="h-1.5 w-24 bg-caramel mx-auto rounded-full shadow-[0_0_20px_rgba(99,102,241,0.5)]"></div>
-          </motion.div>
-          
-          <motion.div 
-            initial=${{ opacity: 0, y: 60 }}
-            whileInView=${{ opacity: 1, y: 0 }}
-            viewport=${{ once: true }}
-            style=${{ 
-              rotateX: mousePos.y * -0.1, 
-              rotateY: mousePos.x * 0.1,
-              transformStyle: "preserve-3d"
-            }}
-            className="relative bg-surface backdrop-blur-3xl border border-white/10 rounded-[3rem] p-12 md:p-16 mb-32 shadow-[0_50px_100px_rgba(0,0,0,0.5)] overflow-hidden group hover:border-caramel/30 transition-colors duration-500"
-          >
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
-            
-            <div className="absolute top-8 right-8 z-20">
-              <span className="px-6 py-2 bg-caramel text-white font-bold text-[10px] uppercase tracking-[0.2em] rounded-full shadow-[0_0_30px_rgba(99,102,241,0.4)]">
-                ${t.featuredTitle}
-              </span>
-            </div>
-            
-            <div className="grid lg:grid-cols-2 gap-20 items-center">
-              <div className="space-y-10" style=${{ transform: "translateZ(50px)" }}>
-                <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-3xl text-caramel shadow-2xl">
-                  <i className="fa-solid fa-rocket"></i>
-                </div>
-                <div>
-                  <h3 className="text-5xl font-black text-white mb-6 tracking-tight">Edropo</h3>
-                  <p className="text-muted text-xl leading-relaxed max-w-lg font-medium opacity-80">
-                    ${t.edropoDesc}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-4">
-                  ${["SaaS", "AI", "E-commerce"].map(tag => html`
-                    <motion.span 
-                      whileHover=${{ scale: 1.1, backgroundColor: "rgba(99, 102, 241, 0.2)", borderColor: "rgba(99, 102, 241, 0.4)" }}
-                      className="px-6 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-muted uppercase tracking-widest transition-all cursor-default"
-                    >
-                      ${tag}
-                    </motion.span>
-                  `)}
-                </div>
-                <div className="pt-6">
-                  <motion.a 
-                    href="https://edropo.com" 
-                    target="_blank" 
-                    whileHover=${{ scale: 1.05, y: -5 }}
-                    whileTap=${{ scale: 0.95 }}
-                    className="inline-flex items-center gap-4 bg-gradient-to-r from-caramel to-indigo-600 text-white px-12 py-5 rounded-2xl font-black text-lg shadow-[0_20px_50px_rgba(99,102,241,0.3)] hover:shadow-[0_25px_60px_rgba(99,102,241,0.5)] transition-all"
-                  >
-                    <span>Visit Website</span>
-                    <i className="fa-solid fa-arrow-right text-sm"></i>
-                  </motion.a>
-                </div>
-              </div>
-              
-              <div className="relative flex justify-center items-center" style=${{ transform: "translateZ(100px)" }}>
-                <motion.div
-                  animate=${{ y: [0, -15, 0] }}
-                  transition=${{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                  whileHover=${{ rotateY: -15, rotateX: 10, scale: 1.08 }}
-                  className="relative w-full max-w-[500px] rounded-3xl overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.8)] border border-white/10 bg-black/40 group-hover:border-caramel/50 transition-all duration-700"
-                >
-                  <img src="/photo/image.png" alt="Edropo Dashboard" className="w-full h-auto object-cover" />
-                  
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
-                </motion.div>
-                
-                <div className="absolute -inset-10 bg-caramel/20 blur-[100px] rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-                
-                <div className="absolute -bottom-16 w-3/4 h-12 bg-caramel/20 blur-3xl rounded-[100%] opacity-0 group-hover:opacity-40 transition-all duration-700"></div>
-              </div>
-            </div>
-          </motion.div>
+      <section className="relative py-20 px-6 overflow-hidden bg-gradient-to-br from-black via-purple-950 to-blue-950">
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-purple-600 opacity-20 blur-[120px] rounded-full"></div>
 
+        <${motion.div}
+          initial=${{ opacity: 0, y: 80 }}
+          whileInView=${{ opacity: 1, y: 0 }}
+          transition=${{ duration: 0.8, ease: "easeOut" }}
+          className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl"
+        >
+          <div className="space-y-6">
+            <div className="inline-block px-4 py-1 text-sm rounded-full bg-purple-600/20 text-purple-300 border border-purple-500/30">
+              🚀 ${t.featuredTitle}
+            </div>
+
+            <h2 className="text-4xl font-bold text-white">
+              Edropo
+            </h2>
+
+            <p className="text-gray-300 max-w-md">
+              ${t.edropoDesc}
+            </p>
+
+            <div className="flex gap-3 flex-wrap">
+              ${["SAAS", "AI", "E-COMMERCE"].map((tag) => html`
+                <span
+                  key=${tag}
+                  className="px-3 py-1 text-sm rounded-full bg-white/10 border border-white/20 text-gray-200 hover:scale-105 hover:border-purple-400 transition cursor-default"
+                >
+                  ${tag}
+                </span>
+              `)}
+            </div>
+
+            <${motion.a}
+              href="https://edropo.com"
+              target="_blank"
+              whileHover=${{ scale: 1.05 }}
+              className="inline-block px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50 transition"
+            >
+              Visit Website
+            </${motion.a}>
+          </div>
+
+          <${motion.div}
+            whileHover=${{ scale: 1.05, rotateY: 8 }}
+            transition=${{ type: "spring", stiffness: 120 }}
+            className="relative flex justify-center"
+            style=${{ perspective: "1000px" }}
+          >
+            <div className="relative">
+              <div className="absolute inset-0 bg-purple-500 blur-3xl opacity-30 rounded-2xl"></div>
+
+              <img
+                src="/photo/image.png"
+                alt="project"
+                className="relative rounded-2xl shadow-2xl max-w-md border border-white/10"
+              />
+            </div>
+          </${motion.div}>
+        </${motion.div}>
+      </section>
+
+      <section className="py-24 bg-[#030303]">
+        <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             ${repos.length > 0 ? repos.map((repo, idx) => html`
-              <motion.div 
+              <${motion.div} 
                 key=${repo.id}
                 initial=${{ opacity: 0, y: 30 }}
                 whileInView=${{ opacity: 1, y: 0 }}
@@ -415,7 +391,7 @@ function App() {
                   </div>
                   
                   <div className="pt-6">
-                    <motion.a 
+                    <${motion.a} 
                       href=${repo.html_url} 
                       target="_blank" 
                       whileHover=${{ x: 5 }}
@@ -423,10 +399,10 @@ function App() {
                     >
                       <span>Explore Repository</span>
                       <i className="fa-solid fa-arrow-right-long text-xs"></i>
-                    </motion.a>
+                    </${motion.a}>
                   </div>
                 </div>
-              </motion.div>
+              </${motion.div}>
             `) : html`<div className="col-span-full py-32 text-center text-muted font-bold tracking-widest animate-pulse uppercase">${t.loading}</div>`}
           </div>
         </div>
