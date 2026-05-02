@@ -293,7 +293,6 @@ function App() {
       </section>
 
       <section className="py-32 relative overflow-hidden bg-[#030303]">
-        {/* Radial Glow Layer */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-caramel/10 blur-[120px] rounded-full -z-10 opacity-50"></div>
         
         <div className="container mx-auto px-6 relative z-10">
@@ -319,7 +318,6 @@ function App() {
             }}
             className="relative bg-surface backdrop-blur-3xl border border-white/10 rounded-[3rem] p-12 md:p-16 mb-32 shadow-[0_50px_100px_rgba(0,0,0,0.5)] overflow-hidden group hover:border-caramel/30 transition-colors duration-500"
           >
-            {/* Subtle Noise Texture */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
             
             <div className="absolute top-8 right-8 z-20">
@@ -372,14 +370,11 @@ function App() {
                 >
                   <img src="/photo/image.png" alt="Edropo Dashboard" className="w-full h-auto object-cover" />
                   
-                  {/* Reflection Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
                 </motion.div>
                 
-                {/* Glow behind image */}
                 <div className="absolute -inset-10 bg-caramel/20 blur-[100px] rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
                 
-                {/* Visual Reflection under image */}
                 <div className="absolute -bottom-16 w-3/4 h-12 bg-caramel/20 blur-3xl rounded-[100%] opacity-0 group-hover:opacity-40 transition-all duration-700"></div>
               </div>
             </div>
