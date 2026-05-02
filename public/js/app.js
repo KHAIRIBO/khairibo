@@ -152,6 +152,11 @@ function App() {
   }, []);
 
   const [repos, setRepos] = useState([]);
+  const projectsRef = useRef(null);
+
+  const scrollToProjects = () => {
+    projectsRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
     fetch("/api/db-status")
@@ -237,7 +242,7 @@ function App() {
             <h1 className="title">${t.title.split("\n").map((line, idx, arr) => html`${line}${idx < arr.length - 1 ? html`<br />` : null}`)}</h1>
             <p className="lead">${t.lead}</p>
             <div className="cta-row">
-              <button className="cta" onClick=${() => alert("Projects clicked")}>${t.ctaProjects}</button>
+              <button className="cta" onClick=${scrollToProjects}>${t.ctaProjects}</button>
               <a href="/Khairi_Bouzakher_CV.pdf" download="Khairi_Bouzakher_CV.pdf" className="cta secondary">${t.ctaCv}</a>
               <a href="https://linkedin.com/in/khairi-bouzakher/" target="_blank" className="social-link" title="LinkedIn">
                 <i className="fa-brands fa-linkedin"></i>
@@ -246,7 +251,11 @@ function App() {
 
           </section>
           <figure className="hero-image" aria-hidden="true">
-            <img src="photo/khairibo.png" alt="Avatar" />
+            <${motion.img} 
+              src="photo/khairibo.png" 
+              alt="Avatar" 
+              style=${{ rotateY: mousePos.x * 0.5, rotateX: mousePos.y * -0.5 }}
+            />
           </figure>
         </div>
       </main>
@@ -292,7 +301,7 @@ function App() {
         </div>
       </section>
 
-      <section className="py-32 relative overflow-hidden bg-[#030303]">
+      <section ref=${projectsRef} className="py-32 relative overflow-hidden bg-[#030303]">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-caramel/10 blur-[120px] rounded-full -z-10 opacity-50"></div>
         
         <div className="container mx-auto px-6 relative z-10">
