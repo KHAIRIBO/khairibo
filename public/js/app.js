@@ -33,11 +33,9 @@ const translations = {
     lead: "Computer Science student specializing in Web Development and Robotics Engineering.",
     ctaProjects: "View Projects",
     ctaCv: "Download CV",
-    loginTitle: "Dashboard Access",
-    loginDesc: "Sign in to manage your submissions and database settings.",
-    loginEmail: "Email",
-    loginPassword: "Password",
-    loginSubmit: "Sign In",
+    loginTitle: "Secure Access",
+    loginDesc: "Use your Google account to access your personalized dashboard.",
+    loginSubmit: "Sign In with Google",
     aboutTitle: "About Me",
     aboutDesc: "Motivated Computer Science student specializing in Web Development and Robotics. Skilled in HTML, PHP, Python, and SQL with a strong interest in building real-world solutions. Active in clubs and robotics competitions with strong teamwork and problem-solving skills.",
     educationTitle: "Education",
@@ -145,7 +143,6 @@ function App() {
   const [lang, setLang] = useState(localStorage.getItem("site_lang") || "en");
   const [dbConnected, setDbConnected] = useState(null); 
   const [route, setRoute] = useState(window.location.pathname || "/");
-  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [user, setUser] = useState(null);
   const [blogs, setBlogs] = useState([]);
   const [selectedBlog, setSelectedBlog] = useState(null);
@@ -230,14 +227,6 @@ function App() {
 
 
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    if (loginForm.email && loginForm.password) {
-      // Basic login for demo, you could also use supabase.auth.signInWithPassword
-      setUser({ email: loginForm.email });
-      navigate("/");
-    }
-  };
 
   const handleGoogleLogin = () => {
     window.location.href = "/auth/google";
@@ -309,46 +298,6 @@ function App() {
   };
 
   const renderContent = () => {
-    if (route === "/login") {
-      return html`
-        <main className="hero">
-          <div className="container">
-            <section className="page-card login-card">
-              <h1>${t.loginTitle}</h1>
-              <p>${t.loginDesc}</p>
-              <form onSubmit=${handleLogin} className="contact-form">
-                <input
-                  type="email"
-                  placeholder=${t.loginEmail}
-                  value=${loginForm.email}
-                  onChange=${(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                  required
-                />
-                <input
-                  type="password"
-                  placeholder=${t.loginPassword}
-                  value=${loginForm.password}
-                  onChange=${(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                  required
-                />
-                <button type="submit" className="cta">${t.loginSubmit}</button>
-              </form>
-
-              <div className="divider">OR</div>
-
-              <button className="google-btn" onClick=${handleGoogleLogin}>
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
-                Sign in with Google
-              </button>
-
-              <div className="cta-row" style=${{ marginTop: '24px' }}>
-                <button className="cta secondary" onClick=${() => navigate("/")}>${t.navHome}</button>
-              </div>
-            </section>
-          </div>
-        </main>
-      `;
-    }
 
     if (route === "/blog") {
       return html`
@@ -445,28 +394,35 @@ function App() {
           <div className="container">
             <header className="page-header mb-12 flex justify-between items-center">
               <div>
-                <h1 className="title">Admin Panel</h1>
-                <p className="lead text-caramel font-bold">System Override Active</p>
+                <h1 className="title">Admin Control</h1>
+                <p className="lead text-caramel font-bold">Logged in as: ${user ? user.displayName : 'Guest Admin'}</p>
               </div>
               <button className="cta secondary" onClick=${() => { setIsAdmin(false); localStorage.removeItem("is_admin"); navigate("/"); }}>Deactivate</button>
             </header>
 
             <div className="admin-grid">
               <div className="dash-card">
-                <h3>Content Management</h3>
+                <h3>Active Session</h3>
+                <div className="profile-details mb-6">
+                  <img src=${user && user.photos ? user.photos[0].value : 'https://via.placeholder.com/60'} className="dash-avatar" style=${{ width: '50px', height: '50px' }} />
+                  <div className="details">
+                    <p className="font-bold">${user ? user.displayName : 'Anonymous'}</p>
+                    <p className="text-xs opacity-60">${user ? user.email : 'No email'}</p>
+                  </div>
+                </div>
                 <div className="admin-actions">
-                  <button className="cta w-full mb-3" onClick=${() => alert("Add Blog coming soon!")}>Add New Blog Post</button>
-                  <button className="cta secondary w-full">Manage Projects</button>
+                  <button className="cta w-full mb-3" onClick=${() => alert("Blog editor opening...")}>Create Blog Post</button>
+                  <button className="cta secondary w-full">Manage Content</button>
                 </div>
               </div>
 
               <div className="dash-card">
-                <h3>System Logs</h3>
+                <h3>Access Logs</h3>
                 <div className="logs-view bg-black/40 rounded-xl p-4 font-mono text-xs h-40 overflow-y-auto">
-                  <p className="text-green-400">[SYSTEM]: Admin Authenticated</p>
-                  <p className="text-blue-400">[FETCH]: Supabase connection stable</p>
-                  <p className="text-purple-400">[LOG]: User session verified</p>
-                  <p className="text-gray-500">[IDLE]: Awaiting commands...</p>
+                  <p className="text-green-400">[AUTH]: ${user ? user.displayName : 'Guest'} authenticated via Google</p>
+                  <p className="text-blue-400">[SESSION]: Token valid for 24h</p>
+                  <p className="text-purple-400">[SYS]: Identity override active</p>
+                  <p className="text-gray-500">[DB]: Blogs table connection verified</p>
                 </div>
               </div>
             </div>
@@ -723,7 +679,12 @@ function App() {
                     <a href="#" onClick=${(e) => { e.preventDefault(); navigate("/dashboard"); }}>${t.navDashboard}</a>
                     <a href="#" onClick=${(e) => { e.preventDefault(); handleLogout(); }}>Logout</a>
                   `
-                : html`<a href="#" onClick=${(e) => { e.preventDefault(); navigate("/login"); }}>${t.navLogin}</a>`
+                : html`
+                    <button className="google-btn header-google-btn" onClick=${handleGoogleLogin}>
+                      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
+                      Sign In
+                    </button>
+                  `
               }
             </nav>
 

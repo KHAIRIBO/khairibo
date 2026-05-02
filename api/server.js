@@ -10,18 +10,26 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Passport Configuration
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  passport.use(new GoogleStrategy({
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "/auth/google/callback"
-    },
-    (accessToken, refreshToken, profile, done) => {
-      return done(null, profile);
-    }
-  ));
-} else {
-  console.warn("Google OAuth credentials missing. Google login will be disabled.");
+try {
+  const gClientId = process.env.GOOGLE_CLIENT_ID;
+  const gClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+  if (gClientId && gClientSecret && gClientId !== "" && gClientSecret !== "") {
+    passport.use(new GoogleStrategy({
+        clientID: gClientId,
+        clientSecret: gClientSecret,
+        callbackURL: "/auth/google/callback"
+      },
+      (accessToken, refreshToken, profile, done) => {
+        return done(null, profile);
+      }
+    ));
+    console.log("Google OAuth Strategy initialized.");
+  } else {
+    console.warn("Google OAuth credentials missing or empty. Google login will be disabled.");
+  }
+} catch (err) {
+  console.error("Failed to initialize Google Strategy:", err.message);
 }
 
 passport.serializeUser((user, done) => done(null, user));
