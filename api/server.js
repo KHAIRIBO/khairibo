@@ -66,24 +66,28 @@ app.get("/api/logout", (req, res, next) => {
 
 // Blog Endpoints
 app.get("/api/blogs", async (req, res) => {
-  if (!supabase) return res.status(500).json({ success: false, error: "Supabase not configured" });
+  if (!supabase) return res.json([]); // Return empty instead of 500
   try {
     const { data, error } = await supabase.from("blogs").select("*").order("created_at", { ascending: false });
-    if (error) throw error;
-    res.json(data);
+    if (error) {
+      console.warn("Blogs table might not exist:", error.message);
+      return res.json([]); 
+    }
+    res.json(data || []);
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error("Blog fetch error:", err);
+    res.json([]);
   }
 });
 
 app.get("/api/blogs/:id", async (req, res) => {
-  if (!supabase) return res.status(500).json({ success: false, error: "Supabase not configured" });
+  if (!supabase) return res.status(404).json({ error: "Not found" });
   try {
     const { data, error } = await supabase.from("blogs").select("*").eq("id", req.params.id).single();
-    if (error) throw error;
+    if (error) return res.status(404).json({ error: "Post not found" });
     res.json(data);
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(404).json({ error: "Not found" });
   }
 });
 
