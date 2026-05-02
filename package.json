@@ -19,7 +19,7 @@
     "passport-google-oauth20": "^2.0.0"
   },
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "description": "A minimalist, high-end portfolio built with Node.js, Express, and React (via esm.sh).",
   "repository": {
