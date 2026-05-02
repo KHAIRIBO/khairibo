@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "https://esm.sh/reac
 import { createRoot } from "https://esm.sh/react-dom@18.3.1/client";
 import htm from "https://esm.sh/htm@3.1.1";
 import { inject } from "https://esm.sh/@vercel/analytics";
+import { motion, AnimatePresence } from "https://esm.sh/framer-motion@11.1.7";
 
 inject();
 
@@ -281,50 +282,104 @@ function App() {
         </div>
       </section>
 
-      <section className="cv-section projects-section">
-        <div className="container">
-          <h2 className="section-title reveal">${t.projectsTitle}</h2>
+      <section className="py-24 relative overflow-hidden">
+        <div className="container mx-auto px-6 relative z-10">
+          <motion.h2 
+            initial=${{ opacity: 0, y: 20 }}
+            whileInView=${{ opacity: 1, y: 0 }}
+            className="text-5xl md:text-6xl font-extrabold text-center mb-16 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent"
+          >
+            ${t.projectsTitle}
+          </motion.h2>
           
-          <div className="featured-project reveal active">
-            <div className="featured-badge">${t.featuredTitle}</div>
-            <div className="featured-grid">
-              <div className="featured-content">
-                <div className="project-icon">
+          <motion.div 
+            initial=${{ opacity: 0, y: 40 }}
+            whileInView=${{ opacity: 1, y: 0 }}
+            viewport=${{ once: true }}
+            transition=${{ duration: 0.8, ease: "easeOut" }}
+            className="relative bg-surface backdrop-blur-2xl border border-glass-border rounded-[2rem] p-8 md:p-12 mb-20 shadow-2xl overflow-hidden group"
+          >
+            <div className="absolute top-0 right-0 bg-gradient-to-l from-caramel to-indigo-600 text-white px-8 py-2 font-bold text-xs uppercase rounded-bl-3xl shadow-lg z-20">
+              ${t.featuredTitle}
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div className="space-y-8">
+                <div className="w-14 h-14 bg-caramel/10 rounded-2xl flex items-center justify-center text-3xl text-caramel shadow-inner">
                   <i className="fa-solid fa-rocket"></i>
                 </div>
-                <h3>Edropo</h3>
-                <p>${t.edropoDesc}</p>
-                <div className="project-tags">
-                  <span>SaaS</span>
-                  <span>AI</span>
-                  <span>E-commerce</span>
+                <div>
+                  <h3 className="text-4xl font-bold text-white mb-4 leading-tight">Edropo</h3>
+                  <p className="text-muted text-lg leading-relaxed max-w-md">${t.edropoDesc}</p>
                 </div>
-                <div className="cta-row">
-                  <a href="https://edropo.com" target="_blank" className="cta mini">Visit Website</a>
+                <div className="flex flex-wrap gap-3">
+                  ${["SaaS", "AI", "E-commerce"].map(tag => html`
+                    <motion.span 
+                      whileHover=${{ scale: 1.05, y: -2 }}
+                      className="px-4 py-1.5 bg-white/5 border border-glass-border rounded-full text-xs font-bold text-muted tracking-wider uppercase hover:text-caramel hover:border-caramel/50 transition-colors cursor-default"
+                    >
+                      ${tag}
+                    </motion.span>
+                  `)}
+                </div>
+                <div className="pt-4">
+                  <motion.a 
+                    href="https://edropo.com" 
+                    target="_blank" 
+                    whileHover=${{ scale: 1.02, boxShadow: "0 20px 40px rgba(99, 102, 241, 0.4)" }}
+                    whileTap=${{ scale: 0.98 }}
+                    className="inline-block bg-caramel text-white px-10 py-4 rounded-xl font-bold text-lg shadow-xl transition-all relative overflow-hidden group/btn"
+                  >
+                    <span className="relative z-10">Visit Website</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-caramel opacity-0 group-hover/btn:opacity-100 transition-opacity"></div>
+                  </motion.a>
                 </div>
               </div>
-              <div className="featured-image">
-                <img src="/photo/image.png" alt="Edropo Dashboard" />
+              
+              <div className="relative perspective-1000">
+                <motion.div
+                  whileHover=${{ rotateY: -10, rotateX: 5, scale: 1.05 }}
+                  transition=${{ type: "spring", stiffness: 300, damping: 20 }}
+                  className="rounded-3xl overflow-hidden shadow-2xl border border-glass-border bg-black/20"
+                >
+                  <img src="/photo/image.png" alt="Edropo Dashboard" className="w-full h-auto transform-gpu" />
+                </motion.div>
+                <div className="absolute -inset-4 bg-caramel/20 blur-3xl rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
               </div>
-
             </div>
-          </div>
+          </motion.div>
 
-          <div className="cv-grid projects-grid">
-            ${repos.length > 0 ? repos.map(repo => html`
-              <div key=${repo.id} className="cv-card project-card reveal active">
-                <div className="project-icon">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            ${repos.length > 0 ? repos.map((repo, idx) => html`
+              <motion.div 
+                key=${repo.id}
+                initial=${{ opacity: 0, y: 30 }}
+                whileInView=${{ opacity: 1, y: 0 }}
+                viewport=${{ once: true }}
+                transition=${{ delay: idx * 0.1, duration: 0.5 }}
+                whileHover=${{ y: -10 }}
+                className="bg-surface backdrop-blur-xl border border-glass-border rounded-3xl p-8 shadow-xl hover:shadow-caramel/10 transition-all flex flex-col group"
+              >
+                <div className="w-12 h-12 bg-caramel/10 rounded-xl flex items-center justify-center text-xl text-caramel mb-6 group-hover:scale-110 transition-transform">
                   <i className="fa-brands fa-github"></i>
                 </div>
-                <h3>${repo.name}</h3>
-                <p>${repo.description || "Project created by Khairi Bouzakher."}</p>
-                <div className="project-tags">
-                  ${repo.language ? html`<span>${repo.language}</span>` : ""}
-                  <span>⭐ ${repo.stargazers_count}</span>
+                <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-caramel transition-colors">${repo.name}</h3>
+                <p className="text-muted text-sm leading-relaxed mb-6 flex-grow">${repo.description || "Premium project developed by Khairi Bouzakher."}</p>
+                <div className="flex flex-wrap gap-2 mb-8">
+                  ${repo.language ? html`<span className="text-[10px] font-bold px-3 py-1 bg-white/5 rounded-md text-muted uppercase tracking-tighter border border-glass-border">${repo.language}</span>` : ""}
+                  <span className="text-[10px] font-bold px-3 py-1 bg-white/5 rounded-md text-muted uppercase tracking-tighter border border-glass-border">⭐ ${repo.stargazers_count}</span>
                 </div>
-                <a href=${repo.html_url} target="_blank" className="cta secondary mini">${t.viewProject}</a>
-              </div>
-            `) : html`<p className="loading-text">${t.loading}</p>`}
+                <motion.a 
+                  href=${repo.html_url} 
+                  target="_blank" 
+                  whileHover=${{ scale: 1.05 }}
+                  whileTap=${{ scale: 0.95 }}
+                  className="w-full text-center py-3 bg-white/5 border border-glass-border rounded-xl text-white font-bold text-sm hover:bg-caramel hover:border-caramel transition-all"
+                >
+                  ${t.viewProject}
+                </motion.a>
+              </motion.div>
+            `) : html`<div className="col-span-full py-20 text-center text-muted animate-pulse">${t.loading}</div>`}
           </div>
         </div>
       </section>
@@ -332,6 +387,7 @@ function App() {
   };
 
   return html`
+
     <div>
       <header className="site-header">
         <div className="container header-inner">
