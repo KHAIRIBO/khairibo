@@ -141,6 +141,16 @@ function App() {
     localStorage.setItem("site_lang", lang);
   }, [lang]);
 
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setMousePos({ x: (e.clientX / window.innerWidth - 0.5) * 20, y: (e.clientY / window.innerHeight - 0.5) * 20 });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
   const [repos, setRepos] = useState([]);
 
   useEffect(() => {
@@ -282,104 +292,138 @@ function App() {
         </div>
       </section>
 
-      <section className="py-24 relative overflow-hidden">
+      <section className="py-32 relative overflow-hidden bg-[#030303]">
+        {/* Radial Glow Layer */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-caramel/10 blur-[120px] rounded-full -z-10 opacity-50"></div>
+        
         <div className="container mx-auto px-6 relative z-10">
-          <motion.h2 
+          <motion.div 
             initial=${{ opacity: 0, y: 20 }}
             whileInView=${{ opacity: 1, y: 0 }}
-            className="text-5xl md:text-6xl font-extrabold text-center mb-16 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent"
+            className="text-center mb-24"
           >
-            ${t.projectsTitle}
-          </motion.h2>
+            <h2 className="text-6xl md:text-7xl font-black tracking-tighter text-white mb-4">
+              Featured <span className="text-caramel">Work</span>
+            </h2>
+            <div className="h-1.5 w-24 bg-caramel mx-auto rounded-full shadow-[0_0_20px_rgba(99,102,241,0.5)]"></div>
+          </motion.div>
           
           <motion.div 
-            initial=${{ opacity: 0, y: 40 }}
+            initial=${{ opacity: 0, y: 60 }}
             whileInView=${{ opacity: 1, y: 0 }}
             viewport=${{ once: true }}
-            transition=${{ duration: 0.8, ease: "easeOut" }}
-            className="relative bg-surface backdrop-blur-2xl border border-glass-border rounded-[2rem] p-8 md:p-12 mb-20 shadow-2xl overflow-hidden group"
+            style=${{ 
+              rotateX: mousePos.y * -0.1, 
+              rotateY: mousePos.x * 0.1,
+              transformStyle: "preserve-3d"
+            }}
+            className="relative bg-surface backdrop-blur-3xl border border-white/10 rounded-[3rem] p-12 md:p-16 mb-32 shadow-[0_50px_100px_rgba(0,0,0,0.5)] overflow-hidden group hover:border-caramel/30 transition-colors duration-500"
           >
-            <div className="absolute top-0 right-0 bg-gradient-to-l from-caramel to-indigo-600 text-white px-8 py-2 font-bold text-xs uppercase rounded-bl-3xl shadow-lg z-20">
-              ${t.featuredTitle}
+            {/* Subtle Noise Texture */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+            
+            <div className="absolute top-8 right-8 z-20">
+              <span className="px-6 py-2 bg-caramel text-white font-bold text-[10px] uppercase tracking-[0.2em] rounded-full shadow-[0_0_30px_rgba(99,102,241,0.4)]">
+                ${t.featuredTitle}
+              </span>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="space-y-8">
-                <div className="w-14 h-14 bg-caramel/10 rounded-2xl flex items-center justify-center text-3xl text-caramel shadow-inner">
+            <div className="grid lg:grid-cols-2 gap-20 items-center">
+              <div className="space-y-10" style=${{ transform: "translateZ(50px)" }}>
+                <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-3xl text-caramel shadow-2xl">
                   <i className="fa-solid fa-rocket"></i>
                 </div>
                 <div>
-                  <h3 className="text-4xl font-bold text-white mb-4 leading-tight">Edropo</h3>
-                  <p className="text-muted text-lg leading-relaxed max-w-md">${t.edropoDesc}</p>
+                  <h3 className="text-5xl font-black text-white mb-6 tracking-tight">Edropo</h3>
+                  <p className="text-muted text-xl leading-relaxed max-w-lg font-medium opacity-80">
+                    ${t.edropoDesc}
+                  </p>
                 </div>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-4">
                   ${["SaaS", "AI", "E-commerce"].map(tag => html`
                     <motion.span 
-                      whileHover=${{ scale: 1.05, y: -2 }}
-                      className="px-4 py-1.5 bg-white/5 border border-glass-border rounded-full text-xs font-bold text-muted tracking-wider uppercase hover:text-caramel hover:border-caramel/50 transition-colors cursor-default"
+                      whileHover=${{ scale: 1.1, backgroundColor: "rgba(99, 102, 241, 0.2)", borderColor: "rgba(99, 102, 241, 0.4)" }}
+                      className="px-6 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-muted uppercase tracking-widest transition-all cursor-default"
                     >
                       ${tag}
                     </motion.span>
                   `)}
                 </div>
-                <div className="pt-4">
+                <div className="pt-6">
                   <motion.a 
                     href="https://edropo.com" 
                     target="_blank" 
-                    whileHover=${{ scale: 1.02, boxShadow: "0 20px 40px rgba(99, 102, 241, 0.4)" }}
-                    whileTap=${{ scale: 0.98 }}
-                    className="inline-block bg-caramel text-white px-10 py-4 rounded-xl font-bold text-lg shadow-xl transition-all relative overflow-hidden group/btn"
+                    whileHover=${{ scale: 1.05, y: -5 }}
+                    whileTap=${{ scale: 0.95 }}
+                    className="inline-flex items-center gap-4 bg-gradient-to-r from-caramel to-indigo-600 text-white px-12 py-5 rounded-2xl font-black text-lg shadow-[0_20px_50px_rgba(99,102,241,0.3)] hover:shadow-[0_25px_60px_rgba(99,102,241,0.5)] transition-all"
                   >
-                    <span className="relative z-10">Visit Website</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-caramel opacity-0 group-hover/btn:opacity-100 transition-opacity"></div>
+                    <span>Visit Website</span>
+                    <i className="fa-solid fa-arrow-right text-sm"></i>
                   </motion.a>
                 </div>
               </div>
               
-              <div className="relative perspective-1000">
+              <div className="relative flex justify-center items-center" style=${{ transform: "translateZ(100px)" }}>
                 <motion.div
-                  whileHover=${{ rotateY: -10, rotateX: 5, scale: 1.05 }}
-                  transition=${{ type: "spring", stiffness: 300, damping: 20 }}
-                  className="rounded-3xl overflow-hidden shadow-2xl border border-glass-border bg-black/20"
+                  animate=${{ y: [0, -15, 0] }}
+                  transition=${{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                  whileHover=${{ rotateY: -15, rotateX: 10, scale: 1.08 }}
+                  className="relative w-full max-w-[500px] rounded-3xl overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.8)] border border-white/10 bg-black/40 group-hover:border-caramel/50 transition-all duration-700"
                 >
-                  <img src="/photo/image.png" alt="Edropo Dashboard" className="w-full h-auto transform-gpu" />
+                  <img src="/photo/image.png" alt="Edropo Dashboard" className="w-full h-auto object-cover" />
+                  
+                  {/* Reflection Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
                 </motion.div>
-                <div className="absolute -inset-4 bg-caramel/20 blur-3xl rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                
+                {/* Glow behind image */}
+                <div className="absolute -inset-10 bg-caramel/20 blur-[100px] rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+                
+                {/* Visual Reflection under image */}
+                <div className="absolute -bottom-16 w-3/4 h-12 bg-caramel/20 blur-3xl rounded-[100%] opacity-0 group-hover:opacity-40 transition-all duration-700"></div>
               </div>
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             ${repos.length > 0 ? repos.map((repo, idx) => html`
               <motion.div 
                 key=${repo.id}
                 initial=${{ opacity: 0, y: 30 }}
                 whileInView=${{ opacity: 1, y: 0 }}
                 viewport=${{ once: true }}
-                transition=${{ delay: idx * 0.1, duration: 0.5 }}
-                whileHover=${{ y: -10 }}
-                className="bg-surface backdrop-blur-xl border border-glass-border rounded-3xl p-8 shadow-xl hover:shadow-caramel/10 transition-all flex flex-col group"
+                transition=${{ delay: idx * 0.1 }}
+                whileHover=${{ y: -15, borderColor: "rgba(99, 102, 241, 0.4)" }}
+                className="bg-surface backdrop-blur-2xl border border-white/5 rounded-[2.5rem] p-10 shadow-2xl transition-all flex flex-col group relative overflow-hidden"
               >
-                <div className="w-12 h-12 bg-caramel/10 rounded-xl flex items-center justify-center text-xl text-caramel mb-6 group-hover:scale-110 transition-transform">
-                  <i className="fa-brands fa-github"></i>
+                <div className="absolute inset-0 bg-gradient-to-br from-caramel/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                
+                <div className="relative z-10 space-y-6">
+                  <div className="w-14 h-14 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-2xl text-caramel group-hover:bg-caramel group-hover:text-white transition-all duration-500">
+                    <i className="fa-brands fa-github"></i>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">${repo.name}</h3>
+                  <p className="text-muted text-base leading-relaxed opacity-70 line-clamp-3">${repo.description || "Elite engineering project by Khairi Bouzakher."}</p>
+                  
+                  <div className="flex flex-wrap gap-2 pt-4">
+                    ${repo.language ? html`<span className="text-[10px] font-black px-4 py-1.5 bg-white/5 rounded-lg text-muted uppercase tracking-widest border border-white/5">${repo.language}</span>` : ""}
+                    <span className="text-[10px] font-black px-4 py-1.5 bg-white/5 rounded-lg text-muted uppercase tracking-widest border border-white/5">⭐ ${repo.stargazers_count}</span>
+                  </div>
+                  
+                  <div className="pt-6">
+                    <motion.a 
+                      href=${repo.html_url} 
+                      target="_blank" 
+                      whileHover=${{ x: 5 }}
+                      className="inline-flex items-center gap-3 text-white font-bold text-sm hover:text-caramel transition-colors"
+                    >
+                      <span>Explore Repository</span>
+                      <i className="fa-solid fa-arrow-right-long text-xs"></i>
+                    </motion.a>
+                  </div>
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-caramel transition-colors">${repo.name}</h3>
-                <p className="text-muted text-sm leading-relaxed mb-6 flex-grow">${repo.description || "Premium project developed by Khairi Bouzakher."}</p>
-                <div className="flex flex-wrap gap-2 mb-8">
-                  ${repo.language ? html`<span className="text-[10px] font-bold px-3 py-1 bg-white/5 rounded-md text-muted uppercase tracking-tighter border border-glass-border">${repo.language}</span>` : ""}
-                  <span className="text-[10px] font-bold px-3 py-1 bg-white/5 rounded-md text-muted uppercase tracking-tighter border border-glass-border">⭐ ${repo.stargazers_count}</span>
-                </div>
-                <motion.a 
-                  href=${repo.html_url} 
-                  target="_blank" 
-                  whileHover=${{ scale: 1.05 }}
-                  whileTap=${{ scale: 0.95 }}
-                  className="w-full text-center py-3 bg-white/5 border border-glass-border rounded-xl text-white font-bold text-sm hover:bg-caramel hover:border-caramel transition-all"
-                >
-                  ${t.viewProject}
-                </motion.a>
               </motion.div>
-            `) : html`<div className="col-span-full py-20 text-center text-muted animate-pulse">${t.loading}</div>`}
+            `) : html`<div className="col-span-full py-32 text-center text-muted font-bold tracking-widest animate-pulse uppercase">${t.loading}</div>`}
           </div>
         </div>
       </section>
