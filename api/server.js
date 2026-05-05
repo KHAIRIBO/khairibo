@@ -186,7 +186,13 @@ app.get("/api/db-test", async (req, res) => {
 
 // SPA fallback
 app.get("*", (req, res) => {
-  res.sendFile(path.resolve(__dirname, "..", "public", "index.html"));
+  const indexPath = path.resolve(__dirname, "..", "public", "index.html");
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error("Failed to send index.html:", err);
+      res.status(500).send("Internal Server Error: Missing index.html");
+    }
+  });
 });
 
 if (require.main === module) {

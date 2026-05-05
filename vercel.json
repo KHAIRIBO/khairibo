@@ -5,6 +5,6 @@
     { "source": "/robots.txt", "destination": "/api/server.js" },
     { "source": "/api/(.*)", "destination": "/api/server.js" },
     { "source": "/auth/(.*)", "destination": "/api/server.js" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!js|css|photo|favicon.ico|Khairi_Bouzakher_CV.pdf).*)", "destination": "/index.html" }
   ]
 }
