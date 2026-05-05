@@ -13,18 +13,20 @@ const PORT = process.env.PORT || 3000;
 try {
   const gClientId = process.env.GOOGLE_CLIENT_ID;
   const gClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  // Use explicit callback URL from env (set on Vercel), fallback to localhost
+  const callbackURL = process.env.GOOGLE_CALLBACK_URL || `http://localhost:${process.env.PORT || 3000}/auth/google/callback`;
 
   if (gClientId && gClientSecret && gClientId !== "" && gClientSecret !== "") {
     passport.use(new GoogleStrategy({
         clientID: gClientId,
         clientSecret: gClientSecret,
-        callbackURL: "/auth/google/callback"
+        callbackURL: callbackURL
       },
       (accessToken, refreshToken, profile, done) => {
         return done(null, profile);
       }
     ));
-    console.log("Google OAuth Strategy initialized.");
+    console.log("Google OAuth Strategy initialized with callback:", callbackURL);
   } else {
     console.warn("Google OAuth credentials missing or empty. Google login will be disabled.");
   }
@@ -37,7 +39,8 @@ passport.deserializeUser((obj, done) => done(null, obj));
 
 // Supabase Initialization
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Use service role key server-side for full access; fall back to anon key
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 let supabase;
 if (supabaseUrl && supabaseKey) {
@@ -88,14 +91,22 @@ app.get("/robots.txt", (req, res) => {
 app.use(express.static(path.join(__dirname, "..", "public")));
 
 // Auth Routes
-app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+app.get("/auth/google", (req, res, next) => {
+  const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+  const host = req.headers["x-forwarded-host"] || req.get("host");
+  const callbackURL = process.env.GOOGLE_CALLBACK_URL || `${protocol}://${host}/auth/google/callback`;
+  // Pass callbackURL here to ensure the redirect matches the current host (useful behind proxies/hosts)
+  passport.authenticate("google", { scope: ["profile", "email"], callbackURL })(req, res, next);
+});
 
-app.get("/auth/google/callback", 
-  passport.authenticate("google", { failureRedirect: "/login" }),
-  (req, res) => {
-    res.redirect("/");
-  }
-);
+app.get("/auth/google/callback", (req, res, next) => {
+  const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+  const host = req.headers["x-forwarded-host"] || req.get("host");
+  const callbackURL = process.env.GOOGLE_CALLBACK_URL || `${protocol}://${host}/auth/google/callback`;
+  passport.authenticate("google", { failureRedirect: "/login", callbackURL })(req, res, next);
+}, (req, res) => {
+  res.redirect("/");
+});
 
 app.get("/api/user", (req, res) => {
   res.json({ user: req.user || null });

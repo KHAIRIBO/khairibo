@@ -352,8 +352,8 @@ function App() {
             <h2 className="text-4xl md:text-6xl font-display font-bold mb-6">Let's work together.</h2>
             <p className="text-xl text-gray-600 dark:text-gray-400 mb-12">Feel free to reach out for collaborations or just a friendly hello.</p>
             
-            <a href="mailto:khairibouzakher@example.com" className="inline-flex items-center gap-3 text-2xl md:text-4xl font-bold hover:text-accentBlue transition-colors mb-16">
-              hello@khairibo.dev <${ArrowRight} className="w-8 h-8 md:w-10 md:h-10" />
+            <a href="mailto:khairibo32@gmail.com" className="inline-flex items-center gap-3 text-2xl md:text-4xl font-bold hover:text-accentBlue transition-colors mb-16">
+              khairibo32@gmail.com <${ArrowRight} className="w-8 h-8 md:w-10 md:h-10" />
             </a>
 
             <div className="flex items-center justify-center gap-6">
@@ -363,7 +363,7 @@ function App() {
               <a href="https://linkedin.com/in/khairi-bouzakher/" target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full glass-card flex items-center justify-center hover:-translate-y-1 transition-transform hover:text-accentBlue">
                 <${Linkedin} size=${20} />
               </a>
-              <a href="mailto:khairibouzakher@example.com" className="w-12 h-12 rounded-full glass-card flex items-center justify-center hover:-translate-y-1 transition-transform hover:text-accentBlue">
+              <a href="mailto:khairibo32@gmail.com" className="w-12 h-12 rounded-full glass-card flex items-center justify-center hover:-translate-y-1 transition-transform hover:text-accentBlue">
                 <${Mail} size=${20} />
               </a>
             </div>
