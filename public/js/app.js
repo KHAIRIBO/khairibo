@@ -183,6 +183,7 @@ function App() {
   const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [adminCode, setAdminCode] = useState("");
   const [isAdmin, setIsAdmin] = useState(localStorage.getItem("is_admin") === "true");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const t = useMemo(() => translations[lang] || translations.en, [lang]);
 
@@ -495,7 +496,7 @@ function App() {
           <section className="hero-content">
             <p className="intro">${t.intro.replace(/,$/, '')} — ${t.title.split("\n").join(' ') } ${user ? html`<span>(Welcome, ${user.email.split('@')[0]})</span>` : ""}</p>
             <h1 className="title">${t.intro.replace(/,$/, '')} — ${t.title.split("\n").join(' ')}</h1>
-            <p className="lead terminal"><span><${Typewriter} text="Web Developer & Future Software Engineer" /></span></p>
+
             <div className="cta-row">
               <button className="cta" onClick=${scrollToProjects}>${t.ctaProjects}</button>
               <a href="/Khairi_Bouzakher_CV.pdf" download="Khairi_Bouzakher_CV.pdf" className="cta secondary">${t.ctaCv}</a>
@@ -720,15 +721,21 @@ function App() {
 
           <div className="header-right">
 
-            <nav className="main-nav" aria-label="Main navigation">
-              <a href="#" onClick=${(e) => { e.preventDefault(); navigate("/"); }}>${t.navHome}</a>
-              <a href="#" onClick=${(e) => { e.preventDefault(); scrollToProjects(); }}>Projects</a>
-              <a href="#" onClick=${(e) => { e.preventDefault(); scrollToSkills(); }}>Skills</a>
-              <a href="#" onClick=${(e) => { e.preventDefault(); scrollToContact(); }}>Contact</a>
+            <button className="burger-menu" onClick=${() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+
+            <nav className="main-nav ${mobileMenuOpen ? 'mobile-open' : ''}" aria-label="Main navigation">
+              <a href="#" onClick=${(e) => { e.preventDefault(); navigate("/"); setMobileMenuOpen(false); }}>${t.navHome}</a>
+              <a href="#" onClick=${(e) => { e.preventDefault(); scrollToProjects(); setMobileMenuOpen(false); }}>Projects</a>
+              <a href="#" onClick=${(e) => { e.preventDefault(); scrollToSkills(); setMobileMenuOpen(false); }}>Skills</a>
+              <a href="#" onClick=${(e) => { e.preventDefault(); scrollToContact(); setMobileMenuOpen(false); }}>Contact</a>
               ${user 
                 ? html`
-                    <a href="#" onClick=${(e) => { e.preventDefault(); navigate("/dashboard"); }}>${t.navDashboard}</a>
-                    <a href="#" onClick=${(e) => { e.preventDefault(); handleLogout(); }}>Logout</a>
+                    <a href="#" onClick=${(e) => { e.preventDefault(); navigate("/dashboard"); setMobileMenuOpen(false); }}>${t.navDashboard}</a>
+                    <a href="#" onClick=${(e) => { e.preventDefault(); handleLogout(); setMobileMenuOpen(false); }}>Logout</a>
                   `
                 : html`
                     <button className="google-btn header-google-btn" onClick=${handleGoogleLogin}>
@@ -739,7 +746,7 @@ function App() {
               }
             </nav>
 
-            <div className="header-controls">
+            <div className="header-controls ${mobileMenuOpen ? 'mobile-open' : ''}">
               <div className="lang-switch" aria-label="Language switch">
                 ${["en", "fr", "ar"].map((code) =>
     html`<button className=${`lang-btn ${lang === code ? "active" : ""}`} onClick=${() => setLang(code)}>${code.toUpperCase()}</button>`
