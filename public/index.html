@@ -16,8 +16,25 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS - Preload and load with higher priority -->
+    <link rel="preload" as="script" href="https://cdn.tailwindcss.com" />
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Inline Critical CSS to prevent FOUC -->
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      
+      /* Hide until CSS loads */
+      body.css-loading { opacity: 0; pointer-events: none; }
+      body.css-loaded { opacity: 1; pointer-events: auto; transition: opacity 0.3s ease-in; }
+      
+      /* Minimal base styling */
+      body { background: #f5f5f5; color: #000; }
+      body.dark { background: #0a0a0a; color: #fff; }
+      #root { min-height: 100vh; }
+    </style>
     <script>
       tailwind.config = {
         darkMode: 'class',
@@ -52,13 +69,27 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css" />
   </head>
-  <body class="bg-lightBg text-black dark:bg-darkBg dark:text-white transition-colors duration-500 overflow-x-hidden selection:bg-accentPurple selection:text-white antialiased">
+  <body class="bg-lightBg text-black dark:bg-darkBg dark:text-white transition-colors duration-500 overflow-x-hidden selection:bg-accentPurple selection:text-white antialiased css-loading">
     
     <!-- Custom Cursor -->
     <div id="cursor-dot" class="hidden md:block pointer-events-none fixed top-0 left-0 w-2 h-2 bg-accentBlue rounded-full z-[9999] transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-100 ease-out"></div>
     <div id="cursor-ring" class="hidden md:block pointer-events-none fixed top-0 left-0 w-8 h-8 border border-accentPurple rounded-full z-[9998] transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-300 ease-out"></div>
 
     <div id="root"></div>
+
+    <!-- Wait for Tailwind CSS to be ready -->
+    <script>
+      function waitForTailwind() {
+        if (window.tailwind) {
+          document.body.classList.remove('css-loading');
+          document.body.classList.add('css-loaded');
+          console.log('Tailwind CSS ready');
+        } else {
+          setTimeout(waitForTailwind, 50);
+        }
+      }
+      waitForTailwind();
+    </script>
 
     <!-- Import Map -->
     <script type="importmap">

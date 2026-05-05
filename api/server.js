@@ -109,7 +109,15 @@ app.get("/auth/google/callback", (req, res, next) => {
 });
 
 app.get("/api/user", (req, res) => {
-  res.json({ user: req.user || null });
+  try {
+    const user = req.user || null;
+    res.setHeader("Content-Type", "application/json");
+    res.json({ user });
+  } catch (err) {
+    console.error("Error in /api/user:", err);
+    res.setHeader("Content-Type", "application/json");
+    res.json({ user: null, error: err.message });
+  }
 });
 
 app.get("/api/logout", (req, res, next) => {

@@ -1,10 +1,19 @@
 {
   "version": 2,
   "rewrites": [
+    { "source": "/api/user", "destination": "/api/server.js" },
+    { "source": "/api/logout", "destination": "/api/server.js" },
+    { "source": "/api/blogs(.*)", "destination": "/api/server.js" },
+    { "source": "/api/config", "destination": "/api/server.js" },
+    { "source": "/api/save", "destination": "/api/server.js" },
+    { "source": "/api/db-status", "destination": "/api/server.js" },
+    { "source": "/api/db-test", "destination": "/api/server.js" },
+    { "source": "/api/(.*)", "destination": "/api/server.js" },
+    { "source": "/auth/google", "destination": "/api/server.js" },
+    { "source": "/auth/google/callback", "destination": "/api/server.js" },
+    { "source": "/auth/(.*)", "destination": "/api/server.js" },
     { "source": "/sitemap.xml", "destination": "/api/server.js" },
     { "source": "/robots.txt", "destination": "/api/server.js" },
-    { "source": "/api/(.*)", "destination": "/api/server.js" },
-    { "source": "/auth/(.*)", "destination": "/api/server.js" },
     { "source": "/((?!js|css|photo|favicon.ico|Khairi_Bouzakher_CV.pdf).*)", "destination": "/index.html" }
   ]
 }
