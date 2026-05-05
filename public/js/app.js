@@ -165,7 +165,7 @@ function App() {
           <div className="flex items-center gap-4">
             ${user ? html`
               <div className="hidden md:flex items-center gap-3">
-                <img src=${user.photo || 'https://via.placeholder.com/32'} alt="Avatar" className="w-8 h-8 rounded-full border border-gray-200 dark:border-white/10" />
+                <img src=${user.photo || 'https://via.placeholder.com/32'} onError=${(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/32'; }} alt="Avatar" className="w-8 h-8 rounded-full border border-gray-200 dark:border-white/10" />
                 <button onClick=${handleLogout} className="text-sm font-medium hover:text-red-500 transition-colors">Logout</button>
               </div>
             ` : html`
