@@ -1,229 +1,62 @@
-console.log("main.js starting...");
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import htm from "htm";
 import { motion, AnimatePresence } from "framer-motion";
-import { createClient } from "@supabase/supabase-js";
-
+import { Moon, Sun, ArrowRight, Github, Linkedin, ExternalLink, Mail, Code, Terminal, Brain } from "lucide-react";
 
 const html = htm.bind(React.createElement);
 
-let supabase;
-const initSupabase = async () => {
-  try {
-    const res = await fetch("/api/config");
-    const config = await res.json();
-    if (config.supabaseUrl && config.supabaseKey) {
-      supabase = createClient(config.supabaseUrl, config.supabaseKey);
-      return supabase;
+// --- Typewriter Component ---
+const Typewriter = ({ texts = [], speed = 100, pause = 2000 }) => {
+  const [text, setText] = useState("");
+  const [index, setIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    const currentFullText = texts[index];
+
+    if (!isDeleting && text === currentFullText) {
+      timer = setTimeout(() => setIsDeleting(true), pause);
+    } else if (isDeleting && text === "") {
+      setIsDeleting(false);
+      setIndex((prev) => (prev + 1) % texts.length);
+    } else {
+      timer = setTimeout(() => {
+        setText(currentFullText.substring(0, text.length + (isDeleting ? -1 : 1)));
+      }, isDeleting ? speed / 2 : speed);
     }
-  } catch (err) {
-    console.error("Failed to init Supabase client", err);
-  }
+
+    return () => clearTimeout(timer);
+  }, [text, isDeleting, index, texts, speed, pause]);
+
+  return html`<span className="inline-block border-r-2 border-accentBlue pr-1 animate-pulse">${text || "\u00A0"}</span>`;
 };
 
-const translations = {
-  en: {
-    navHome: "Home",
-    navLogin: "Login",
-    intro: "Hi, I'm Khairi Bouzakher,",
-    title: "I'M A\nSTUDENT",
-    lead: "Computer Science student specializing in Web Development and Robotics Engineering.",
-    ctaProjects: "View Projects",
-    ctaCv: "Download CV",
-    loginTitle: "Secure Access",
-    loginDesc: "Use your Google account to access your personalized dashboard.",
-    loginSubmit: "Sign In with Google",
-    aboutTitle: "About Me",
-    aboutDesc: "Motivated Computer Science student specializing in Web Development and Robotics. Skilled in HTML, PHP, Python, and SQL with a strong interest in building real-world solutions. Active in clubs and robotics competitions with strong teamwork and problem-solving skills.",
-    educationTitle: "Education",
-    eduPlace: "ISIMG - Higher Institute of Computer Science and Multimedia of Gabès",
-    eduSpec: "Specialization: Web Development & Robotics Engineering (LISI)",
-    eduDate: "Baccalaureate (2023/2024) - Good average",
-    skillsTitle: "Technical Skills",
-    skillsList: ["HTML, PHP, Python, SQL", "Databases: MySQL, PostgreSQL", "Web Development (Front-end & Back-end basics)"],
-    experienceTitle: "Experience & Activities",
-    expList: ["Active member in music, social, and tech clubs", "Participated in robotics competitions", "Earned certificates in robotics and IT"],
-    languagesTitle: "Languages",
-    langList: ["Arabic (Native)", "French (Good)", "English (Good)"],
-    projectsTitle: "My Projects",
-    viewProject: "View on GitHub",
-    featuredTitle: "Featured Project",
-    edropoDesc: "Edropo - The Smart E-commerce System. Launch your dropshipping business with winning products, AI-powered insights, and a proven 90-day growth roadmap.",
-    project1Desc: "E-commerce web application inspired by Shopify Collective, featuring full admin dashboard and user management.",
-    project2Desc: "Tunisian cuisine collection featuring traditional and modern dishes from across Tunisia.",
-    project3Desc: "Modern minimalist portfolio with dark mode, 3D animations, and Supabase integration.",
-    loading: "Loading...",
-    navBlog: "Blog",
-    blogTitle: "My Blog",
-    readMore: "Read More",
-    backToBlog: "Back to Blog",
-    noBlogs: "No blog posts found yet. Check back soon!",
-    navDashboard: "Dashboard",
-    dashTitle: "User Dashboard",
-    dashWelcome: "Welcome back,",
-    dashProfile: "Profile Information",
-    dashStats: "Quick Stats",
-    dashSettings: "Settings"
-  },
-  fr: {
-    navHome: "Accueil",
-    navLogin: "Connexion",
-    intro: "Salut, je suis Khairi Bouzakher,",
-    title: "JE SUIS\nÉTUDIANT",
-    lead: "Étudiant en Informatique spécialisé en Développement Web et Ingénierie Robotique.",
-    ctaProjects: "Mes Projets",
-    ctaCv: "Télécharger CV",
-    loginTitle: "Accès Dashboard",
-    loginDesc: "Connectez-vous pour gérer vos soumissions et paramètres.",
-    loginEmail: "Email",
-    loginPassword: "Mot de passe",
-    loginSubmit: "Se connecter",
-    aboutTitle: "À propos",
-    aboutDesc: "Étudiant motivé en informatique spécialisé en développement Web et robotique. Compétent en HTML, PHP, Python et SQL avec un fort intérêt pour la création de solutions réelles. Actif dans les clubs et les compétitions de robotique.",
-    educationTitle: "Formation",
-    eduPlace: "ISIMG - Institut Supérieur d'Informatique et de Multimédia de Gabès",
-    eduSpec: "Spécialisation : Développement Web & Ingénierie Robotique (LISI)",
-    eduDate: "Baccalauréat (2023/2024) - Mention Bien",
-    skillsTitle: "Compétences",
-    skillsList: ["HTML, PHP, Python, SQL", "Bases de données : MySQL, PostgreSQL", "Développement Web (Front-end & Back-end)"],
-    experienceTitle: "Expériences & Activités",
-    expList: ["Membre actif de clubs musicaux, sociaux et technologiques", "Participation à des compétitions de robotique", "Certificats en robotique et informatique"],
-    languagesTitle: "Langues",
-    langList: ["Arabe (Maternel)", "Français (Bien)", "Anglais (Bien)"],
-    projectsTitle: "Mes Projets",
-    viewProject: "Voir sur GitHub",
-    featuredTitle: "Projet Phare",
-    edropoDesc: "Edropo - Le Système E-commerce Intelligent. Lancez votre business de dropshipping avec des produits gagnants et des outils IA.",
-    project1Desc: "Application e-commerce inspirée de Shopify Collective, avec tableau de bord complet et gestion d'utilisateurs.",
-    project2Desc: "Collection de cuisine tunisienne présentant des plats traditionnels et modernes de toute la Tunisie.",
-    project3Desc: "Portfolio moderne et minimaliste avec mode sombre, animations 3D et intégration Supabase.",
-    loading: "Chargement..."
-  },
-  ar: {
-    navHome: "الرئيسية",
-    navLogin: "تسجيل الدخول",
-    intro: "أهلاً، أنا خيري بوزاخر،",
-    title: "أنا\nطالب",
-    lead: "طالب هندسة إعلامية متخصص في تطوير الويب والروبوتات.",
-    ctaProjects: "تصفح المشاريع",
-    ctaCv: "تحميل السيرة الذاتية",
-    loginTitle: "لوحة التحكم",
-    loginDesc: "قم بتسجيل الدخول لإدارة بياناتك وإعدادات قاعدة البيانات.",
-    loginEmail: "البريد الإلكتروني",
-    loginPassword: "كلمة المرور",
-    loginSubmit: "تسجيل الدخول",
-    aboutTitle: "من أنا",
-    aboutDesc: "طالب هندسة إعلامية متميز متخصص في تطوير الويب والروبوتات. متمرس في HTML، PHP، Python، و SQL مع شغف كبير ببناء حلول واقعية. عضو نشط في نوادي التكنولوجيا ومسابقات الروبوتات.",
-    educationTitle: "التعليم",
-    eduPlace: "ISIMG - المعهد العالي للإعلامية والملتيميديا بقابس",
-    eduSpec: "التخصص: هندسة تطوير الويب والروبوتات (LISI)",
-    eduDate: "بكالوريا (2023/2024) - معدل جيد",
-    skillsTitle: "المهارات التقنية",
-    skillsList: ["HTML, PHP, Python, SQL", "قواعد البيانات: MySQL, PostgreSQL", "تطوير الويب (الواجهات الأمامية والخلفية)"],
-    experienceTitle: "الخبرات والأنشطة",
-    expList: ["عضو نشط في نوادي الموسيقى، الاجتماع والتكنولوجيا", "مشارك في مسابقات الروبوتات الوطنية", "حاصل على شهادات في مجال الروبوتات والمعلوماتية"],
-    languagesTitle: "اللغات",
-    langList: ["العربية (اللغة الأم)", "الفرنسية (جيد)", "الإنجليزية (جيد)"],
-    projectsTitle: "مشاريعي",
-    viewProject: "عرض على GitHub",
-    featuredTitle: "المشروع الأبرز",
-    edropoDesc: "Edropo - النظام الذكي للتجارة الإلكترونية. ابدأ عملك في التجارة الإلكترونية مع منتجات رابحة وأدوات مدعومة بالذكاء الاصطناعي.",
-    project1Desc: "تطبيق تجارة إلكترونية مستوحى من Shopify Collective، يتميز بلوحة تحكم كاملة وإدارة المستخدمين.",
-    project2Desc: "مجموعة من المأكولات التونسية تضم أطباقًا تقليدية وحديثة من جميع أنحاء تونس.",
-    project3Desc: "بورتفوليو عصري وبسيط مع وضع مظلم، رسوم متحركة ثلاثية الأبعاد، وتكامل مع Supabase.",
-    loading: "جاري التحميل..."
-  },
-};
-
-
+// --- Main App Component ---
 function App() {
-  // Simple typewriter component for subtitle
-  const Typewriter = ({ text = "", speed = 60 }) => {
-    const [displayed, setDisplayed] = useState("");
-    useEffect(() => {
-      let mounted = true;
-      let i = 0;
-      const tick = () => {
-        if (!mounted) return;
-        if (i <= text.length) {
-          setDisplayed(text.slice(0, i));
-          i++;
-          setTimeout(tick, speed);
-        } else {
-          // pause then clear and restart
-          setTimeout(() => {
-            if (!mounted) return;
-            i = 0;
-            setDisplayed("");
-            setTimeout(tick, 500);
-          }, 1400);
-        }
-      };
-      tick();
-      return () => { mounted = false; };
-    }, [text, speed]);
-    return html`<span>${displayed}</span>`;
-  };
-
-  const projectsRef = useRef(null);
-  const skillsRef = useRef(null);
-  const contactRef = useRef(null);
-
-  const scrollToProjects = () => projectsRef.current?.scrollIntoView({ behavior: 'smooth' });
-  const scrollToSkills = () => skillsRef.current?.scrollIntoView({ behavior: 'smooth' });
-  const scrollToContact = () => contactRef.current?.scrollIntoView({ behavior: 'smooth' });
-  const [lang, setLang] = useState(localStorage.getItem("site_lang") || "en");
-  const [dbConnected, setDbConnected] = useState(null); 
-  const [route, setRoute] = useState(window.location.pathname || "/");
+  const [loading, setLoading] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
+  const [activeSection, setActiveSection] = useState("home");
   const [user, setUser] = useState(null);
-  const [blogs, setBlogs] = useState([]);
-  const [selectedBlog, setSelectedBlog] = useState(null);
-  const [logoClicks, setLogoClicks] = useState(0);
-  const [showAdminAuth, setShowAdminAuth] = useState(false);
-  const [adminCode, setAdminCode] = useState("");
-  const [isAdmin, setIsAdmin] = useState(localStorage.getItem("is_admin") === "true");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const t = useMemo(() => translations[lang] || translations.en, [lang]);
-
-  const navigate = (path) => {
-    window.history.pushState({}, "", path);
-    setRoute(path);
-  };
-
-  useEffect(() => {
-    const handlePopState = () => setRoute(window.location.pathname);
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.lang = lang;
-    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
-    localStorage.setItem("site_lang", lang);
-  }, [lang]);
-
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      setMousePos({ x: (e.clientX / window.innerWidth - 0.5) * 20, y: (e.clientY / window.innerHeight - 0.5) * 20 });
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
-
   const [repos, setRepos] = useState([]);
-  
 
+  // Fetch Session
   useEffect(() => {
-    fetch("/api/db-status")
+    fetch("/api/user")
       .then(res => res.json())
-      .then(data => setDbConnected(data.connected))
-      .catch(() => setDbConnected(false));
+      .then(data => {
+        if (data.user) {
+          setUser({
+            email: data.user.emails ? data.user.emails[0].value : data.user.email,
+            displayName: data.user.displayName,
+            photo: data.user.photos ? data.user.photos[0].value : null
+          });
+        }
+      })
+      .catch(err => console.error("Session check failed", err));
 
-    // Dynamic GitHub Fetch
+    // Fetch GitHub Repos
     fetch("https://api.github.com/users/KHAIRIBO/repos?sort=updated&per_page=6")
       .then(res => res.json())
       .then(data => {
@@ -232,31 +65,7 @@ function App() {
         }
       })
       .catch(e => console.error("GitHub fetch failed", e));
-
-    // Fetch Blogs
-    fetch("/api/blogs")
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) setBlogs(data);
-      })
-      .catch(err => console.error("Blog fetch failed", err));
   }, []);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("active");
-        }
-      });
-    }, { threshold: 0.1 });
-
-    document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
-    return () => observer.disconnect();
-  }, [route]);
-
-
-
 
   const handleGoogleLogin = () => {
     window.location.href = "/auth/google";
@@ -266,548 +75,315 @@ function App() {
     try {
       await fetch("/api/logout");
       setUser(null);
-      navigate("/");
     } catch (err) {
       console.error("Logout failed", err);
     }
   };
 
+  // Handle Loading
   useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const res = await fetch("/api/user");
-        const data = await res.json();
-        if (data.user) {
-          // Flatten user object if it comes from Passport profile
-          const userObj = {
-            email: data.user.emails ? data.user.emails[0].value : data.user.email,
-            displayName: data.user.displayName
-          };
-          setUser(userObj);
-        }
-      } catch (err) {
-        console.error("Session check failed", err);
-      }
-    };
-    checkUser();
-    
-    initSupabase();
+    setTimeout(() => {
+      setLoading(false);
+      document.getElementById('loading-screen')?.remove();
+    }, 1500);
   }, []);
 
-  // Auth Protection for Dashboard
+  // Handle Dark Mode
   useEffect(() => {
-    if (route === "/dashboard" && !user) {
-      navigate("/login");
-    }
-  }, [route, user]);
+    const isDark = localStorage.getItem('theme') === 'dark';
+    setDarkMode(isDark);
+  }, []);
 
-  const handleLogoClick = (e) => {
-    e.preventDefault();
-    const newCount = logoClicks + 1;
-    setLogoClicks(newCount);
-    if (newCount === 3) {
-      setShowAdminAuth(true);
-      setLogoClicks(0);
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
     } else {
-      navigate("/");
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
+
+  const toggleTheme = () => setDarkMode(!darkMode);
+
+  // Smooth Scroll
+  const scrollTo = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+      setActiveSection(id);
     }
   };
 
-  const verifyAdminCode = (e) => {
-    e.preventDefault();
-    if (adminCode === "6cc4aca9df") {
-      setIsAdmin(true);
-      localStorage.setItem("is_admin", "true");
-      setShowAdminAuth(false);
-      setAdminCode("");
-      navigate("/admin");
-    } else {
-      alert("Invalid Code");
-      setAdminCode("");
-    }
-  };
-
-  const renderContent = () => {
-
-    if (route === "/blog") {
-      return html`
-        <main className="hero">
-          <div className="container">
-            <header className="page-header">
-              <h1 className="title text-center mb-12">${t.blogTitle}</h1>
-            </header>
-            
-            <div className="blog-grid">
-              ${blogs.length > 0 
-                ? blogs.map(blog => html`
-                    <${motion.article} 
-                      key=${blog.id}
-                      initial=${{ opacity: 0, y: 20 }}
-                      animate=${{ opacity: 1, y: 0 }}
-                      className="blog-card"
-                      onClick=${() => { setSelectedBlog(blog); navigate(`/blog/${blog.id}`); }}
-                    >
-                      <div className="blog-image">
-                        <img src=${blog.image_url || 'https://via.placeholder.com/400x250'} alt=${blog.title} />
-                      </div>
-                      <div className="blog-body">
-                        <span className="blog-date">${new Date(blog.created_at).toLocaleDateString()}</span>
-                        <h3>${blog.title}</h3>
-                        <p>${blog.excerpt}</p>
-                        <button className="read-more-btn">${t.readMore} <i className="fa-solid fa-arrow-right-long"></i></button>
-                      </div>
-                    </${motion.article}>
-                  `)
-                : html`<div className="col-span-full text-center py-20 opacity-50">${t.noBlogs}</div>`
-              }
-            </div>
-          </div>
-        </main>
-      `;
-    }
-
-    if (route === "/dashboard" && user) {
-      return html`
-        <main className="dashboard-page hero">
-          <div className="container">
-            <header className="dash-header mb-12">
-              <h1 className="title">${t.dashTitle}</h1>
-              <p className="lead">${t.dashWelcome} <strong>${user.displayName || user.email.split('@')[0]}</strong></p>
-            </header>
-
-            <div className="dash-grid">
-              <div className="dash-card profile-info-card">
-                <h3><i className="fa-solid fa-user-circle mr-2"></i> ${t.dashProfile}</h3>
-                <div className="profile-details">
-                  <img src=${user.photos ? user.photos[0].value : 'https://via.placeholder.com/100'} className="dash-avatar" />
-                  <div className="details">
-                    <p><strong>Name:</strong> ${user.displayName || 'N/A'}</p>
-                    <p><strong>Email:</strong> ${user.email}</p>
-                    <p><strong>Provider:</strong> Google OAuth</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="dash-card stats-card">
-                <h3><i className="fa-solid fa-chart-line mr-2"></i> ${t.dashStats}</h3>
-                <div className="stats-row">
-                  <div className="stat-item">
-                    <span className="stat-value">${repos.length}</span>
-                    <span className="stat-label">Projects</span>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-value">${blogs.length}</span>
-                    <span className="stat-label">Posts</span>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-value">Elite</span>
-                    <span className="stat-label">Rank</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="dash-card settings-preview-card">
-                <h3><i className="fa-solid fa-cog mr-2"></i> ${t.dashSettings}</h3>
-                <p className="opacity-50 mb-6">Manage your account settings and preferences.</p>
-                <button className="cta secondary w-full">Edit Profile</button>
-                <button className="cta secondary w-full mt-3" onClick=${handleLogout}>Sign Out</button>
-              </div>
-            </div>
-          </div>
-        </main>
-      `;
-    }
-
-    if (route === "/admin" && isAdmin) {
-      return html`
-        <main className="admin-page hero">
-          <div className="container">
-            <header className="page-header mb-12 flex justify-between items-center">
-              <div>
-                <h1 className="title">Admin Control</h1>
-                <p className="lead text-caramel font-bold">Logged in as: ${user ? user.displayName : 'Guest Admin'}</p>
-              </div>
-              <button className="cta secondary" onClick=${() => { setIsAdmin(false); localStorage.removeItem("is_admin"); navigate("/"); }}>Deactivate</button>
-            </header>
-
-            <div className="admin-grid">
-              <div className="dash-card">
-                <h3>Active Session</h3>
-                <div className="profile-details mb-6">
-                  <img src=${user && user.photos ? user.photos[0].value : 'https://via.placeholder.com/60'} className="dash-avatar" style=${{ width: '50px', height: '50px' }} />
-                  <div className="details">
-                    <p className="font-bold">${user ? user.displayName : 'Anonymous'}</p>
-                    <p className="text-xs opacity-60">${user ? user.email : 'No email'}</p>
-                  </div>
-                </div>
-                <div className="admin-actions">
-                  <button className="cta w-full mb-3" onClick=${() => alert("Blog editor opening...")}>Create Blog Post</button>
-                  <button className="cta secondary w-full">Manage Content</button>
-                </div>
-              </div>
-
-              <div className="dash-card">
-                <h3>Access Logs</h3>
-                <div className="logs-view bg-black/40 rounded-xl p-4 font-mono text-xs h-40 overflow-y-auto">
-                  <p className="text-green-400">[AUTH]: ${user ? user.displayName : 'Guest'} authenticated via Google</p>
-                  <p className="text-blue-400">[SESSION]: Token valid for 24h</p>
-                  <p className="text-purple-400">[SYS]: Identity override active</p>
-                  <p className="text-gray-500">[DB]: Blogs table connection verified</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </main>
-      `;
-    }
-
-    if (route.startsWith("/blog/")) {
-      const blog = selectedBlog || blogs.find(b => b.id.toString() === route.split("/")[2]);
-      if (!blog) return html`<div className="container py-40 text-center">${t.loading}</div>`;
-
-      return html`
-        <main className="blog-post-page">
-          <div className="container">
-            <button className="cta secondary mb-8" onClick=${() => navigate("/blog")}>
-              <i className="fa-solid fa-arrow-left-long mr-2"></i> ${t.backToBlog}
-            </button>
-            
-            <article className="blog-content page-card">
-              <div className="blog-post-header">
-                <span className="blog-date">${new Date(blog.created_at).toLocaleDateString()}</span>
-                <h1>${blog.title}</h1>
-                <div className="post-meta">By ${blog.author || 'Khairi'}</div>
-              </div>
-              
-              <div className="blog-post-image">
-                <img src=${blog.image_url || 'https://via.placeholder.com/1200x600'} alt=${blog.title} />
-              </div>
-              
-              <div className="blog-post-body" dangerouslySetInnerHTML=${{ __html: blog.content }}></div>
-            </article>
-          </div>
-        </main>
-      `;
-    }
-
+  if (loading) {
     return html`
-      <main className="hero" id="home">
-        <div className="container hero-grid">
-          <section className="hero-content">
-            <p className="intro">${t.intro.replace(/,$/, '')} — ${t.title.split("\n").join(' ') } ${user ? html`<span>(Welcome, ${user.email.split('@')[0]})</span>` : ""}</p>
-            <h1 className="title">${t.intro.replace(/,$/, '')} — ${t.title.split("\n").join(' ')}</h1>
-
-            <div className="cta-row">
-              <button className="cta" onClick=${scrollToProjects}>${t.ctaProjects}</button>
-              <a href="/Khairi_Bouzakher_CV.pdf" download="Khairi_Bouzakher_CV.pdf" className="cta secondary">${t.ctaCv}</a>
-              <a href="https://linkedin.com/in/khairi-bouzakher/" target="_blank" className="social-link" title="LinkedIn">
-                <i className="fa-brands fa-linkedin"></i>
-              </a>
-            </div>
-
-          </section>
-          <figure className="hero-image" aria-hidden="true">
-            <${motion.img} 
-              src="photo/khairibo.png" 
-              alt="Avatar" 
-              className="avatar"
-              style=${{ rotateY: mousePos.x * 0.5, rotateX: mousePos.y * -0.5 }}
-              animate=${{ y: [0, -15, 0] }}
-              transition=${{ 
-                duration: 5, 
-                repeat: Infinity, 
-                ease: "easeInOut" 
-              }}
-            />
-          </figure>
-        </div>
-      </main>
-
-      <section className="cv-section" ref=${projectsRef}>
-        <div className="container" ref=${projectsRef}>
-          <div className="cv-grid">
-            <div className="cv-card profile-card reveal">
-              <h2>${t.aboutTitle}</h2>
-              <p>${t.aboutDesc}</p>
-            </div>
-            
-            <div className="cv-card education-card reveal">
-              <h3>${t.educationTitle}</h3>
-              <div className="cv-item">
-                <p className="item-title">${t.eduPlace}</p>
-                <p className="item-subtitle">${t.eduSpec}</p>
-                <p className="item-date">${t.eduDate}</p>
-              </div>
-            </div>
-
-            <div className="cv-card skills-card reveal">
-              <h3>${t.skillsTitle}</h3>
-              <ul className="skills-list">
-                ${t.skillsList.map(item => html`<li>${item}</li>`)}
-              </ul>
-            </div>
-
-            <div className="cv-card experience-card reveal">
-              <h3>${t.experienceTitle}</h3>
-              <ul className="cv-list">
-                ${t.expList.map(item => html`<li>${item}</li>`)}
-              </ul>
-            </div>
-
-            <div className="cv-card languages-card reveal">
-              <h3>${t.languagesTitle}</h3>
-              <div className="lang-items">
-                ${t.langList.map(item => html`<span>${item}</span>`)}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-20" ref=${skillsRef} id="skills">
-        <div className="container">
-          <h2 className="title mb-6">Skills</h2>
-          <div className="page-card reveal">
-            <p>Core skills: HTML, CSS, JavaScript, PHP, Python, SQL. Interested in web systems and robotics.</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-20 bg-[#05050a]" ref=${contactRef} id="contact">
-        <div className="container">
-          <h2 className="title mb-6">Contact</h2>
-          <div className="page-card reveal">
-            <p>Want to collaborate? Reach out via email: <a href="mailto:khairi@example.com">khairi@example.com</a></p>
-          </div>
-        </div>
-      </section>
-
-      <section className="relative py-20 px-6 overflow-hidden bg-gradient-to-br from-black via-purple-950 to-blue-950">
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-purple-600 opacity-20 blur-[120px] rounded-full"></div>
-
-        <${motion.div}
-          initial=${{ opacity: 0, y: 80 }}
-          whileInView=${{ opacity: 1, y: 0 }}
-          transition=${{ duration: 0.8, ease: "easeOut" }}
-          className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl"
-        >
-          <div className="space-y-6">
-            <div className="inline-block px-4 py-1 text-sm rounded-full bg-purple-600/20 text-purple-300 border border-purple-500/30">
-              🚀 ${t.featuredTitle}
-            </div>
-
-            <h2 className="text-4xl font-bold text-white">
-              Edropo
-            </h2>
-
-            <p className="text-gray-300 max-w-md">
-              ${t.edropoDesc}
-            </p>
-
-            <div className="flex gap-3 flex-wrap">
-              ${["SAAS", "AI", "E-COMMERCE"].map((tag) => html`
-                <span
-                  key=${tag}
-                  className="px-3 py-1 text-sm rounded-full bg-white/10 border border-white/20 text-gray-200 hover:scale-105 hover:border-purple-400 transition cursor-default"
-                >
-                  ${tag}
-                </span>
-              `)}
-            </div>
-
-            <${motion.a}
-              href="https://edropo.com"
-              target="_blank"
-              whileHover=${{ scale: 1.05 }}
-              className="inline-block px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50 transition"
-            >
-              Visit Website
-            </${motion.a}>
-          </div>
-
-          <${motion.div}
-            whileHover=${{ scale: 1.05, rotateY: 8 }}
-            transition=${{ type: "spring", stiffness: 120 }}
-            className="relative flex justify-center"
-            style=${{ perspective: "1000px" }}
-          >
-            <div className="relative">
-              <div className="absolute inset-0 bg-purple-500 blur-3xl opacity-30 rounded-2xl"></div>
-
-              <img
-                src="/photo/image.png"
-                alt="project"
-                className="relative rounded-2xl shadow-2xl max-w-2xl border border-white/10 w-full h-auto"
-              />
-            </div>
-          </${motion.div}>
-        </${motion.div}>
-      </section>
-
-      <section className="py-24 bg-[#030303]">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            ${repos.length > 0 ? repos.map((repo, idx) => html`
-              <${motion.div} 
-                key=${repo.id}
-                initial=${{ opacity: 0, y: 30 }}
-                whileInView=${{ opacity: 1, y: 0 }}
-                viewport=${{ once: true }}
-                transition=${{ delay: idx * 0.1 }}
-                whileHover=${{ y: -15, borderColor: "rgba(99, 102, 241, 0.4)" }}
-                className="bg-surface backdrop-blur-2xl border border-white/5 rounded-[2.5rem] p-10 shadow-2xl transition-all flex flex-col group relative overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-caramel/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                
-                <div className="relative z-10 space-y-6">
-                  <div className="w-14 h-14 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-2xl text-caramel group-hover:bg-caramel group-hover:text-white transition-all duration-500">
-                    <i className="fa-brands fa-github"></i>
-                  </div>
-                  <h3 className="text-2xl font-bold text-white tracking-tight">${repo.name}</h3>
-                  <p className="text-muted text-base leading-relaxed opacity-70 line-clamp-3">${repo.description || "Elite engineering project by Khairi Bouzakher."}</p>
-                  
-                  <div className="flex flex-wrap gap-2 pt-4">
-                    ${repo.language ? html`<span className="text-[10px] font-black px-4 py-1.5 bg-white/5 rounded-lg text-muted uppercase tracking-widest border border-white/5">${repo.language}</span>` : ""}
-                    <span className="text-[10px] font-black px-4 py-1.5 bg-white/5 rounded-lg text-muted uppercase tracking-widest border border-white/5">⭐ ${repo.stargazers_count}</span>
-                  </div>
-                  
-                  <div className="pt-6">
-                    <${motion.a} 
-                      href=${repo.html_url} 
-                      target="_blank" 
-                      whileHover=${{ x: 5 }}
-                      className="inline-flex items-center gap-3 text-white font-bold text-sm hover:text-caramel transition-colors"
-                    >
-                      <span>Explore Repository</span>
-                      <i className="fa-solid fa-arrow-right-long text-xs"></i>
-                    </${motion.a}>
-                  </div>
-                </div>
-              </${motion.div}>
-            `) : html`<div className="col-span-full py-32 text-center text-muted font-bold tracking-widest animate-pulse uppercase">${t.loading}</div>`}
-          </div>
-        </div>
-      </section>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-lightBg dark:bg-darkBg transition-colors duration-500">
+        <div className="w-12 h-12 border-4 border-accentBlue/20 border-t-accentBlue rounded-full animate-spin"></div>
+      </div>
     `;
-  };
+  }
 
   return html`
+    <div className="relative w-full min-h-screen font-sans selection:bg-accentBlue selection:text-white">
+      
+      {/* Background Decor */}
+      <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-[0.2]"></div>
+        <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-accentBlue/20 rounded-full blur-[120px] animate-blob"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-accentPurple/20 rounded-full blur-[120px] animate-blob" style=${{ animationDelay: "2s" }}></div>
+      </div>
 
-    <div>
-      <div className="bg-matrix"><div className="code-lines"></div></div>
-      <header className="site-header">
-        <div className="container header-inner">
+      {/* Navbar */}
+      <nav className="fixed top-0 w-full z-50 transition-all duration-300 bg-white/70 dark:bg-[#0a0a0a]/70 backdrop-blur-md border-b border-gray-200/50 dark:border-white/10">
+        <div className="container mx-auto px-6 h-20 flex items-center justify-between">
           <${motion.a} 
-            className="logo" 
             href="#" 
-            onClick=${handleLogoClick}
-            whileHover=${{ scale: 1.05, filter: "brightness(1.2)" }}
-            whileTap=${{ scale: 0.95 }}
-            transition=${{ type: "spring", stiffness: 400, damping: 17 }}
+            onClick=${(e) => { e.preventDefault(); scrollTo('home'); }}
+            className="text-2xl font-display font-bold tracking-tighter"
+            initial=${{ opacity: 0, x: -20 }}
+            animate=${{ opacity: 1, x: 0 }}
           >
-            Khairi <${motion.span} 
-              className="logo-accent"
-              animate=${{ 
-                color: ["#94a3b8", "#38bdf8", "#94a3b8"],
-                textShadow: ["0 0 0px rgba(56,189,248,0)", "0 0 12px rgba(56,189,248,0.4)", "0 0 0px rgba(56,189,248,0)"]
-              }}
-              transition=${{ 
-                duration: 4, 
-                repeat: Infinity, 
-                ease: "easeInOut" 
-              }}
-            >Bouzakher</${motion.span}>
+            KBO<span className="text-accentBlue">.</span>
           </${motion.a}>
 
-          <div className="header-right">
+          <div className="hidden md:flex items-center gap-8">
+            ${['Home', 'Projects', 'Skills', 'About', 'Contact'].map((item, i) => html`
+              <${motion.a}
+                key=${item}
+                href=${`#${item.toLowerCase()}`}
+                onClick=${(e) => { e.preventDefault(); scrollTo(item.toLowerCase()); }}
+                className=${`text-sm font-medium transition-colors hover:text-accentBlue ${activeSection === item.toLowerCase() ? 'text-accentBlue' : 'text-gray-600 dark:text-gray-300'}`}
+                initial=${{ opacity: 0, y: -10 }}
+                animate=${{ opacity: 1, y: 0 }}
+                transition=${{ delay: i * 0.1 }}
+              >
+                ${item}
+              </${motion.a}>
+            `)}
+          </div>
 
-            <button className="burger-menu" onClick=${() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
-              <span></span>
-              <span></span>
-              <span></span>
-            </button>
-
-            <nav className="main-nav ${mobileMenuOpen ? 'mobile-open' : ''}" aria-label="Main navigation">
-              <a href="#" onClick=${(e) => { e.preventDefault(); navigate("/"); setMobileMenuOpen(false); }}>${t.navHome}</a>
-              <a href="#" onClick=${(e) => { e.preventDefault(); scrollToProjects(); setMobileMenuOpen(false); }}>Projects</a>
-              <a href="#" onClick=${(e) => { e.preventDefault(); scrollToSkills(); setMobileMenuOpen(false); }}>Skills</a>
-              <a href="#" onClick=${(e) => { e.preventDefault(); scrollToContact(); setMobileMenuOpen(false); }}>Contact</a>
-              ${user 
-                ? html`
-                    <a href="#" onClick=${(e) => { e.preventDefault(); navigate("/dashboard"); setMobileMenuOpen(false); }}>${t.navDashboard}</a>
-                    <a href="#" onClick=${(e) => { e.preventDefault(); handleLogout(); setMobileMenuOpen(false); }}>Logout</a>
-                  `
-                : html`
-                    <button className="google-btn header-google-btn" onClick=${handleGoogleLogin}>
-                      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
-                      Sign In
-                    </button>
-                  `
-              }
-            </nav>
-
-            <div className="header-controls ${mobileMenuOpen ? 'mobile-open' : ''}">
-              <div className="lang-switch" aria-label="Language switch">
-                ${["en", "fr", "ar"].map((code) =>
-    html`<button className=${`lang-btn ${lang === code ? "active" : ""}`} onClick=${() => setLang(code)}>${code.toUpperCase()}</button>`
-  )}
+          <div className="flex items-center gap-4">
+            ${user ? html`
+              <div className="hidden md:flex items-center gap-3">
+                <img src=${user.photo || 'https://via.placeholder.com/32'} alt="Avatar" className="w-8 h-8 rounded-full border border-gray-200 dark:border-white/10" />
+                <button onClick=${handleLogout} className="text-sm font-medium hover:text-red-500 transition-colors">Logout</button>
               </div>
-            </div>
+            ` : html`
+              <button onClick=${handleGoogleLogin} className="hidden md:flex items-center gap-2 text-sm font-medium hover:text-accentBlue transition-colors px-4 py-2 rounded-full glass-card hover:bg-gray-100 dark:hover:bg-white/5">
+                <i className="fa-brands fa-google text-red-500"></i> Sign In
+              </button>
+            `}
+
+            <${motion.button}
+              onClick=${toggleTheme}
+              className="w-10 h-10 rounded-full flex items-center justify-center glass-card hover:scale-110 transition-transform"
+              initial=${{ opacity: 0, scale: 0 }}
+              animate=${{ opacity: 1, scale: 1 }}
+              aria-label="Toggle Dark Mode"
+            >
+              ${darkMode ? html`<${Sun} size=${18} className="text-yellow-400" />` : html`<${Moon} size=${18} className="text-gray-800" />`}
+            </${motion.button}>
           </div>
         </div>
-      </header>
+      </nav>
 
-      <${AnimatePresence} mode="wait">
-        <${motion.div}
-          key=${route}
-          initial=${{ opacity: 0, y: 10 }}
-          animate=${{ opacity: 1, y: 0 }}
-          exit=${{ opacity: 0, y: -10 }}
-          transition=${{ duration: 0.3, ease: "easeOut" }}
-        >
-          ${renderContent()}
-        </${motion.div}>
-      </${AnimatePresence}>
-
-      <${AnimatePresence}>
-        ${showAdminAuth && html`
-          <${motion.div} 
-            initial=${{ opacity: 0 }}
-            animate=${{ opacity: 1 }}
-            exit=${{ opacity: 0 }}
-            className="admin-modal-overlay"
+      {/* Hero Section */}
+      <section id="home" className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+        <div className="container mx-auto px-6 relative z-10 flex flex-col items-center text-center">
+          <${motion.div}
+            initial=${{ opacity: 0, y: 30 }}
+            animate=${{ opacity: 1, y: 0 }}
+            transition=${{ duration: 0.8 }}
+            className="max-w-4xl"
           >
-            <${motion.div} 
-              initial=${{ scale: 0.9, y: 20 }}
-              animate=${{ scale: 1, y: 0 }}
-              className="admin-modal"
-            >
-              <h2>Authorization Required</h2>
-              <p>Enter the security override code</p>
-              <form onSubmit=${verifyAdminCode}>
-                <input 
-                  type="password" 
-                  autoFocus
-                  placeholder="Secret Code" 
-                  value=${adminCode} 
-                  onChange=${(e) => setAdminCode(e.target.value)} 
-                />
-                <div className="modal-actions">
-                  <button type="button" className="cta secondary" onClick=${() => setShowAdminAuth(false)}>Cancel</button>
-                  <button type="submit" className="cta">Authorize</button>
-                </div>
-              </form>
-            </${motion.div}>
-          </${motion.div}>
-        `}
-      </${AnimatePresence}>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card text-sm font-medium mb-8 text-accentPurple dark:text-accentBlue">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accentBlue opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-accentBlue"></span>
+              </span>
+              Available for new opportunities
+            </div>
+            
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold tracking-tight mb-6 text-gray-900 dark:text-white">
+              Hi, I'm <br className="md:hidden" />
+              <span className="text-gradient">Khairi Bouzakher</span>
+            </h1>
+            
+            <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 mb-10 h-10">
+              <${Typewriter} texts=${["Full Stack Developer", "AI Enthusiast", "Creative Problem Solver"]} speed=${80} pause=${2000} />
+            </p>
 
-      <footer className="site-footer">
-        <div className="container">&copy; ${new Date().getFullYear()} khairi bouzakher</div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button 
+                onClick=${() => scrollTo('projects')}
+                className="w-full sm:w-auto px-8 py-4 rounded-full bg-black dark:bg-white text-white dark:text-black font-semibold hover:scale-105 transition-transform flex items-center justify-center gap-2"
+              >
+                View Projects <${ArrowRight} size=${18} />
+              </button>
+              <button 
+                onClick=${() => scrollTo('contact')}
+                className="w-full sm:w-auto px-8 py-4 rounded-full glass-card font-semibold hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              >
+                Contact Me
+              </button>
+            </div>
+          </${motion.div}>
+        </div>
+      </section>
+
+      {/* Projects Section */}
+      <section id="projects" className="py-32 relative">
+        <div className="container mx-auto px-6">
+          <div className="mb-16">
+            <h2 className="text-4xl md:text-5xl font-display font-bold mb-4">Selected Work</h2>
+            <p className="text-gray-600 dark:text-gray-400 max-w-2xl text-lg">A showcase of my recent projects, blending modern web technologies with clean, intuitive design.</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            ${repos.length > 0 ? repos.map((repo, idx) => html`
+              <${motion.div}
+                key=${repo.id}
+                initial=${{ opacity: 0, y: 50 }}
+                whileInView=${{ opacity: 1, y: 0 }}
+                viewport=${{ once: true, margin: "-100px" }}
+                transition=${{ duration: 0.6, delay: idx * 0.1 }}
+                className="group glass-card rounded-3xl overflow-hidden glow-hover p-8 flex flex-col"
+              >
+                <div className="w-14 h-14 bg-accentBlue/10 rounded-2xl flex items-center justify-center mb-6 text-accentBlue group-hover:bg-accentBlue group-hover:text-white transition-all duration-500">
+                  <${Github} size=${28} />
+                </div>
+                <div className="flex gap-2 mb-4 flex-wrap">
+                  ${repo.language ? html`<span className="px-3 py-1 text-xs font-semibold rounded-full bg-accentPurple/10 text-accentPurple border border-accentPurple/20 uppercase tracking-wider">${repo.language}</span>` : null}
+                  <span className="px-3 py-1 text-xs font-semibold rounded-full bg-gray-500/10 text-gray-500 border border-gray-500/20">⭐ ${repo.stargazers_count}</span>
+                </div>
+                <h3 className="text-2xl font-bold mb-3">${repo.name}</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-8 flex-grow line-clamp-3">${repo.description || "A project built by Khairi Bouzakher. Click below to explore the codebase."}</p>
+                <a href=${repo.html_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 font-semibold hover:text-accentBlue transition-colors mt-auto">
+                  View Repository <${ExternalLink} size=${16} />
+                </a>
+              </${motion.div}>
+            `) : html`<div className="col-span-full py-20 text-center text-gray-500 font-medium animate-pulse">Loading GitHub Projects...</div>`}
+          </div>
+        </div>
+      </section>
+
+      {/* Skills Section */}
+      <section id="skills" className="py-32 bg-gray-50 dark:bg-white/[0.02] border-y border-gray-200 dark:border-white/5">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-display font-bold mb-4">Tech Arsenal</h2>
+            <p className="text-gray-600 dark:text-gray-400">Tools and technologies I use to build robust applications.</p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+            ${[
+              { name: "React / Next.js", icon: Code, color: "text-blue-500" },
+              { name: "Node.js", icon: Terminal, color: "text-green-500" },
+              { name: "Python / AI", icon: Brain, color: "text-yellow-500" },
+              { name: "Tailwind CSS", icon: Code, color: "text-cyan-500" },
+            ].map((skill, i) => html`
+              <${motion.div}
+                key=${skill.name}
+                initial=${{ opacity: 0, scale: 0.8 }}
+                whileInView=${{ opacity: 1, scale: 1 }}
+                viewport=${{ once: true }}
+                whileHover=${{ y: -10 }}
+                transition=${{ duration: 0.3, delay: i * 0.1 }}
+                className="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-4 cursor-pointer"
+              >
+                <div className="w-14 h-14 rounded-full bg-white dark:bg-black/50 flex items-center justify-center shadow-lg">
+                  <${skill.icon} className=${skill.color} size=${24} />
+                </div>
+                <span className="font-semibold text-sm">${skill.name}</span>
+              </${motion.div}>
+            `)}
+          </div>
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section id="about" className="py-32">
+        <div className="container mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <${motion.div}
+              initial=${{ opacity: 0, x: -50 }}
+              whileInView=${{ opacity: 1, x: 0 }}
+              viewport=${{ once: true }}
+              className="relative"
+            >
+              <div className="aspect-square rounded-3xl overflow-hidden glass-card p-2">
+                <img src="/photo/khairibo.png" alt="Khairi Bouzakher" className="w-full h-full object-cover rounded-2xl filter grayscale hover:grayscale-0 transition-all duration-500" />
+              </div>
+              <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-gradient-to-br from-accentBlue to-accentPurple rounded-full blur-2xl opacity-50 -z-10"></div>
+            </${motion.div}>
+
+            <${motion.div}
+              initial=${{ opacity: 0, x: 50 }}
+              whileInView=${{ opacity: 1, x: 0 }}
+              viewport=${{ once: true }}
+            >
+              <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">About Me</h2>
+              <p className="text-lg text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+                I'm a passionate Full Stack Developer and Computer Science student specializing in Web Development and AI. I love turning complex problems into simple, beautiful, and intuitive designs.
+              </p>
+              <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+                When I'm not coding, you can find me exploring new technologies, participating in robotics competitions, or building side projects that solve real-world problems.
+              </p>
+              <div className="flex gap-4">
+                <a href="/Khairi_Bouzakher_CV.pdf" download className="px-6 py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black font-semibold hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors">
+                  Download CV
+                </a>
+              </div>
+            </${motion.div}>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="py-32 relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[500px] bg-accentPurple/10 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
+        
+        <div className="container mx-auto px-6 max-w-4xl text-center">
+          <${motion.div}
+            initial=${{ opacity: 0, y: 30 }}
+            whileInView=${{ opacity: 1, y: 0 }}
+            viewport=${{ once: true }}
+          >
+            <h2 className="text-4xl md:text-6xl font-display font-bold mb-6">Let's work together.</h2>
+            <p className="text-xl text-gray-600 dark:text-gray-400 mb-12">Feel free to reach out for collaborations or just a friendly hello.</p>
+            
+            <a href="mailto:khairibouzakher@example.com" className="inline-flex items-center gap-3 text-2xl md:text-4xl font-bold hover:text-accentBlue transition-colors mb-16">
+              hello@khairibo.dev <${ArrowRight} className="w-8 h-8 md:w-10 md:h-10" />
+            </a>
+
+            <div className="flex items-center justify-center gap-6">
+              <a href="https://github.com/KHAIRIBO" target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full glass-card flex items-center justify-center hover:-translate-y-1 transition-transform hover:text-accentBlue">
+                <${Github} size=${20} />
+              </a>
+              <a href="https://linkedin.com/in/khairi-bouzakher/" target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full glass-card flex items-center justify-center hover:-translate-y-1 transition-transform hover:text-accentBlue">
+                <${Linkedin} size=${20} />
+              </a>
+              <a href="mailto:khairibouzakher@example.com" className="w-12 h-12 rounded-full glass-card flex items-center justify-center hover:-translate-y-1 transition-transform hover:text-accentBlue">
+                <${Mail} size=${20} />
+              </a>
+            </div>
+          </${motion.div}>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-8 border-t border-gray-200 dark:border-white/10 text-center">
+        <p className="text-gray-500 dark:text-gray-400 text-sm">
+          © ${new Date().getFullYear()} Khairi Bouzakher. Built with React & Tailwind.
+        </p>
       </footer>
+
     </div>
   `;
 }
 
-createRoot(document.getElementById("root")).render(html`<${App} />`);
-
+const rootElement = document.getElementById("root");
+if (rootElement) {
+  const root = createRoot(rootElement);
+  root.render(html`<${App} />`);
+}

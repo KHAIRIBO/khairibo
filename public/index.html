@@ -3,49 +3,64 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Khairi Bouzakher - Portfolio. Student and Web Developer specializing in Web Development and Robotics Engineering." />
-    <meta name="author" content="Khairi Bouzakher" />
-    <meta name="google-site-verification" content="nzKPcfv1ukEEixWxcZAJuXSfWBmLbzRAvTL3nUvAhtc" />
-    <meta name="google-site-verification" content="KgemmuU9rNyqpdQUZStqVbEDYfykUnNy8WsDiczLZP4" />
-    <link rel="canonical" href="https://khairibo.vercel.app/" />
-    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+    <meta name="description" content="Khairi Bouzakher - Full Stack Developer & AI Enthusiast." />
     <title>Khairi Bouzakher | Portfolio</title>
-    <!-- Favicon: photo shown in browser tab -->
+    
     <link rel="icon" type="image/png" href="/photo/khairibo.png" />
-    <link rel="apple-touch-icon" href="/photo/khairibo.png" />
-    <link rel="shortcut icon" type="image/png" href="/photo/khairibo.png" />
-
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              display: ['Syne', 'sans-serif'],
+            },
             colors: {
-              caramel: '#6366f1',
-              surface: 'rgba(25, 25, 30, 0.6)',
-              glass: 'rgba(255, 255, 255, 0.03)',
-              'glass-border': 'rgba(255, 255, 255, 0.08)',
+              darkBg: '#0a0a0a',
+              lightBg: '#f5f5f5',
+              accentBlue: '#3b82f6',
+              accentPurple: '#8b5cf6',
             },
             animation: {
-              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'blob': 'blob 7s infinite',
+            },
+            keyframes: {
+              blob: {
+                '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                '100%': { transform: 'translate(0px, 0px) scale(1)' },
+              }
             }
           }
         }
       }
     </script>
+
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css" />
-
-
   </head>
-  <body>
-    <div class="bg-mesh"></div>
+  <body class="bg-lightBg text-black dark:bg-darkBg dark:text-white transition-colors duration-500 overflow-x-hidden selection:bg-accentPurple selection:text-white antialiased">
+    
+    <!-- Custom Cursor -->
+    <div id="cursor-dot" class="hidden md:block pointer-events-none fixed top-0 left-0 w-2 h-2 bg-accentBlue rounded-full z-[9999] transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-100 ease-out"></div>
+    <div id="cursor-ring" class="hidden md:block pointer-events-none fixed top-0 left-0 w-8 h-8 border border-accentPurple rounded-full z-[9998] transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-300 ease-out"></div>
 
     <div id="root"></div>
 
+    <!-- Import Map -->
     <script type="importmap">
       {
         "imports": {
@@ -53,10 +68,44 @@
           "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?target=es2022",
           "htm": "https://esm.sh/htm@3.1.1?target=es2022",
           "framer-motion": "https://esm.sh/framer-motion@11.1.7?deps=react@18.3.1,react-dom@18.3.1&target=es2022",
-          "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.45.0?target=es2022"
+          "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.45.0?target=es2022",
+          "lucide-react": "https://esm.sh/lucide-react@0.378.0?deps=react@18.3.1&target=es2022"
         }
       }
     </script>
     <script type="module" src="/js/app.js"></script>
+    <script>
+      // Cursor logic
+      const dot = document.getElementById('cursor-dot');
+      const ring = document.getElementById('cursor-ring');
+      
+      window.addEventListener('mousemove', (e) => {
+        dot.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+        ring.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+      });
+
+      document.addEventListener('mousedown', () => {
+        ring.style.transform += ' scale(0.8)';
+        ring.style.backgroundColor = 'rgba(139, 92, 246, 0.2)';
+      });
+      document.addEventListener('mouseup', () => {
+        ring.style.transform = ring.style.transform.replace(' scale(0.8)', '');
+        ring.style.backgroundColor = 'transparent';
+      });
+
+      // Hover logic for cursor
+      document.body.addEventListener('mouseover', (e) => {
+        if(e.target.closest('a') || e.target.closest('button')) {
+          ring.style.transform += ' scale(1.5)';
+          ring.style.borderColor = '#3b82f6';
+        }
+      });
+      document.body.addEventListener('mouseout', (e) => {
+        if(e.target.closest('a') || e.target.closest('button')) {
+          ring.style.transform = ring.style.transform.replace(' scale(1.5)', '');
+          ring.style.borderColor = '#8b5cf6';
+        }
+      });
+    </script>
   </body>
 </html>
