@@ -1,15 +1,15 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "api/server.js",
-      "use": "@vercel/node"
-    }
+    { "src": "api/server.js", "use": "@vercel/node" },
+    { "src": "public/**", "use": "@vercel/static" }
   ],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/api/server.js"
-    }
+  "routes": [
+    { "src": "/sitemap.xml",   "dest": "/api/server.js" },
+    { "src": "/robots.txt",    "dest": "/api/server.js" },
+    { "src": "/api/(.*)",      "dest": "/api/server.js" },
+    { "src": "/auth/(.*)",     "dest": "/api/server.js" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)",          "dest": "/api/server.js" }
   ]
 }
