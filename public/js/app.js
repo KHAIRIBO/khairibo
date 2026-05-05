@@ -38,24 +38,9 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
-  const [user, setUser] = useState(null);
   const [repos, setRepos] = useState([]);
 
-  // Fetch Session
   useEffect(() => {
-    fetch("/api/user")
-      .then(res => res.json())
-      .then(data => {
-        if (data.user) {
-          setUser({
-            email: data.user.emails ? data.user.emails[0].value : data.user.email,
-            displayName: data.user.displayName,
-            photo: data.user.photos ? data.user.photos[0].value : null
-          });
-        }
-      })
-      .catch(err => console.error("Session check failed", err));
-
     // Fetch GitHub Repos
     fetch("https://api.github.com/users/KHAIRIBO/repos?sort=updated&per_page=6")
       .then(res => res.json())
@@ -66,19 +51,6 @@ function App() {
       })
       .catch(e => console.error("GitHub fetch failed", e));
   }, []);
-
-  const handleGoogleLogin = () => {
-    window.location.href = "/auth/google";
-  };
-
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/logout");
-      setUser(null);
-    } catch (err) {
-      console.error("Logout failed", err);
-    }
-  };
 
   // Handle Loading
   useEffect(() => {
@@ -163,17 +135,6 @@ function App() {
           </div>
 
           <div className="flex items-center gap-4">
-            ${user ? html`
-              <div className="hidden md:flex items-center gap-3">
-                <img src=${user.photo || 'https://via.placeholder.com/32'} onError=${(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/32'; }} alt="Avatar" className="w-8 h-8 rounded-full border border-gray-200 dark:border-white/10" />
-                <button onClick=${handleLogout} className="text-sm font-medium hover:text-red-500 transition-colors">Logout</button>
-              </div>
-            ` : html`
-              <button onClick=${handleGoogleLogin} className="hidden md:flex items-center gap-2 text-sm font-medium hover:text-accentBlue transition-colors px-4 py-2 rounded-full glass-card hover:bg-gray-100 dark:hover:bg-white/5">
-                <i className="fa-brands fa-google text-red-500"></i> Sign In
-              </button>
-            `}
-
             <${motion.button}
               onClick=${toggleTheme}
               className="w-10 h-10 rounded-full flex items-center justify-center glass-card hover:scale-110 transition-transform"

@@ -2,40 +2,9 @@ require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const { createClient } = require("@supabase/supabase-js");
-const session = require("express-session");
-const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// Passport Configuration
-try {
-  const gClientId = process.env.GOOGLE_CLIENT_ID;
-  const gClientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  // Use explicit callback URL from env (set on Vercel), fallback to localhost
-  const callbackURL = process.env.GOOGLE_CALLBACK_URL || `http://localhost:${process.env.PORT || 3000}/auth/google/callback`;
-
-  if (gClientId && gClientSecret && gClientId !== "" && gClientSecret !== "") {
-    passport.use(new GoogleStrategy({
-        clientID: gClientId,
-        clientSecret: gClientSecret,
-        callbackURL: callbackURL
-      },
-      (accessToken, refreshToken, profile, done) => {
-        return done(null, profile);
-      }
-    ));
-    console.log("Google OAuth Strategy initialized with callback:", callbackURL);
-  } else {
-    console.warn("Google OAuth credentials missing or empty. Google login will be disabled.");
-  }
-} catch (err) {
-  console.error("Failed to initialize Google Strategy:", err.message);
-}
-
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((obj, done) => done(null, obj));
 
 // Supabase Initialization
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -53,19 +22,6 @@ if (supabaseUrl && supabaseKey) {
 
 // Middleware
 app.use(express.json());
-app.use(session({ 
-  secret: process.env.SESSION_SECRET || "kbo-secret", 
-  resave: false, 
-  saveUninitialized: false,
-  cookie: { 
-    secure: process.env.NODE_ENV === 'production', // HTTPS only on Vercel
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
-}));
-app.use(passport.initialize());
-app.use(passport.session());
 // Dynamic sitemap — must come BEFORE express.static
 app.get("/sitemap.xml", (req, res) => {
   const protocol = req.headers["x-forwarded-proto"] || req.protocol;
@@ -99,43 +55,6 @@ app.get("/robots.txt", (req, res) => {
 });
 
 app.use(express.static(path.join(__dirname, "..", "public")));
-
-// Auth Routes
-app.get("/auth/google", (req, res, next) => {
-  const protocol = req.headers["x-forwarded-proto"] || req.protocol;
-  const host = req.headers["x-forwarded-host"] || req.get("host");
-  const callbackURL = process.env.GOOGLE_CALLBACK_URL || `${protocol}://${host}/auth/google/callback`;
-  // Pass callbackURL here to ensure the redirect matches the current host (useful behind proxies/hosts)
-  passport.authenticate("google", { scope: ["profile", "email"], callbackURL })(req, res, next);
-});
-
-app.get("/auth/google/callback", (req, res, next) => {
-  const protocol = req.headers["x-forwarded-proto"] || req.protocol;
-  const host = req.headers["x-forwarded-host"] || req.get("host");
-  const callbackURL = process.env.GOOGLE_CALLBACK_URL || `${protocol}://${host}/auth/google/callback`;
-  passport.authenticate("google", { failureRedirect: "/login", callbackURL })(req, res, next);
-}, (req, res) => {
-  res.redirect("/");
-});
-
-app.get("/api/user", (req, res) => {
-  try {
-    const user = req.user || null;
-    res.setHeader("Content-Type", "application/json");
-    res.json({ user });
-  } catch (err) {
-    console.error("Error in /api/user:", err);
-    res.setHeader("Content-Type", "application/json");
-    res.json({ user: null, error: err.message });
-  }
-});
-
-app.get("/api/logout", (req, res, next) => {
-  req.logout((err) => {
-    if (err) return next(err);
-    res.json({ success: true });
-  });
-});
 
 // Blog Endpoints
 app.get("/api/blogs", async (req, res) => {
