@@ -214,11 +214,7 @@ function App() {
   }, []);
 
   const [repos, setRepos] = useState([]);
-  const projectsRef = useRef(null);
-
-  const scrollToProjects = () => {
-    projectsRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  
 
   useEffect(() => {
     fetch("/api/db-status")
