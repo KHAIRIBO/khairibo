@@ -53,7 +53,17 @@ if (supabaseUrl && supabaseKey) {
 
 // Middleware
 app.use(express.json());
-app.use(session({ secret: process.env.SESSION_SECRET || "kbo-secret", resave: false, saveUninitialized: true }));
+app.use(session({ 
+  secret: process.env.SESSION_SECRET || "kbo-secret", 
+  resave: false, 
+  saveUninitialized: false,
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production', // HTTPS only on Vercel
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
 app.use(passport.initialize());
 app.use(passport.session());
 // Dynamic sitemap — must come BEFORE express.static
