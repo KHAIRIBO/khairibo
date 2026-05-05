@@ -196,9 +196,25 @@ app.get("*", (req, res) => {
 });
 
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+  const startServer = (port) => {
+    const server = app.listen(port, () => {
+      console.log(`Server running on http://localhost:${port}`);
+    });
+
+    server.on('error', (err) => {
+      if (err && err.code === 'EADDRINUSE') {
+        const nextPort = parseInt(port, 10) + 1;
+        console.warn(`Port ${port} in use, attempting ${nextPort}...`);
+        // try next port once
+        startServer(nextPort);
+      } else {
+        console.error('Server error:', err);
+        process.exit(1);
+      }
+    });
+  };
+
+  startServer(PORT);
 }
 
 module.exports = app;
