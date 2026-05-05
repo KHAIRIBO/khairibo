@@ -26,7 +26,7 @@ const translations = {
   en: {
     navHome: "Home",
     navLogin: "Login",
-    intro: "Hi, I'm khairi,",
+    intro: "Hi, I'm Khairi Bouzakher,",
     title: "I'M A\nSTUDENT",
     lead: "Computer Science student specializing in Web Development and Robotics Engineering.",
     ctaProjects: "View Projects",
@@ -69,7 +69,7 @@ const translations = {
   fr: {
     navHome: "Accueil",
     navLogin: "Connexion",
-    intro: "Salut, je suis khairi,",
+    intro: "Salut, je suis Khairi Bouzakher,",
     title: "JE SUIS\nÉTUDIANT",
     lead: "Étudiant en Informatique spécialisé en Développement Web et Ingénierie Robotique.",
     ctaProjects: "Mes Projets",
@@ -103,7 +103,7 @@ const translations = {
   ar: {
     navHome: "الرئيسية",
     navLogin: "تسجيل الدخول",
-    intro: "أهلاً، أنا خيري،",
+    intro: "أهلاً، أنا خيري بوزاخر،",
     title: "أنا\nطالب",
     lead: "طالب هندسة إعلامية متخصص في تطوير الويب والروبوتات.",
     ctaProjects: "تصفح المشاريع",
@@ -586,7 +586,7 @@ function App() {
               <img
                 src="/photo/image.png"
                 alt="project"
-                className="relative rounded-2xl shadow-2xl max-w-md border border-white/10"
+                className="relative rounded-2xl shadow-2xl max-w-2xl border border-white/10 w-full h-auto"
               />
             </div>
           </${motion.div}>
