@@ -653,18 +653,18 @@ function App() {
             whileTap=${{ scale: 0.95 }}
             transition=${{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            khairi<${motion.span} 
+            Khairi <${motion.span} 
               className="logo-accent"
               animate=${{ 
-                color: ["#a0a0ab", "#6366f1", "#a0a0ab"],
-                textShadow: ["0 0 0px rgba(99,102,241,0)", "0 0 10px rgba(99,102,241,0.3)", "0 0 0px rgba(99,102,241,0)"]
+                color: ["#94a3b8", "#38bdf8", "#94a3b8"],
+                textShadow: ["0 0 0px rgba(56,189,248,0)", "0 0 12px rgba(56,189,248,0.4)", "0 0 0px rgba(56,189,248,0)"]
               }}
               transition=${{ 
                 duration: 4, 
                 repeat: Infinity, 
                 ease: "easeInOut" 
               }}
-            >bouzakher</${motion.span}>
+            >Bouzakher</${motion.span}>
           </${motion.a}>
 
           <div className="header-right">

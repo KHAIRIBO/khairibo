@@ -125,7 +125,22 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .header-inner {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-inner {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
 }
 
 .logo {
@@ -135,6 +150,20 @@ body {
   font-family: Poppins, sans-serif;
   font-size: 20px;
   white-space: nowrap;
+  display: block;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .logo {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo {
+    font-size: 16px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -151,21 +180,52 @@ body {
 
 .logo-accent {
   font-weight: 500;
-  color: var(--muted);
-  margin-left: 8px;
-  opacity: 0.9
+  color: var(--caramel);
+  margin-left: 4px;
+  opacity: 1;
+  display: inline;
+}
+
+@media (max-width: 480px) {
+  .logo-accent {
+    margin-left: 2px;
+  }
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 18px
+  gap: 18px;
+}
+
+@media (max-width: 768px) {
+  .header-right {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-right {
+    gap: 8px;
+  }
 }
 
 .main-nav {
   display: flex;
   align-items: center;
-  gap: 12px
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .main-nav {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .main-nav {
+    display: none;
+  }
 }
 
 .main-nav a {
@@ -174,7 +234,19 @@ body {
   padding: 6px 8px;
   border-radius: 6px;
   font-size: 15px;
-  opacity: 0.9
+  opacity: 0.9;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .main-nav a {
+    font-size: 14px;
+    padding: 6px 12px;
+  }
 }
 
 .main-nav a:hover {
@@ -186,12 +258,30 @@ body {
 .header-controls {
   display: flex;
   align-items: center;
-  gap: 14px
+  gap: 14px;
+}
+
+@media (max-width: 768px) {
+  .header-controls {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-controls {
+    gap: 6px;
+  }
 }
 
 .socials {
   display: flex;
-  gap: 10px
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .socials {
+    gap: 6px;
+  }
 }
 
 .social {
@@ -203,7 +293,14 @@ body {
   background: transparent;
   color: var(--muted);
   font-size: 13px;
-  text-decoration: none
+  text-decoration: none;
+}
+
+@media (max-width: 480px) {
+  .social {
+    padding: 5px 6px;
+    font-size: 12px;
+  }
 }
 
 .social:hover {
@@ -213,7 +310,13 @@ body {
 
 .lang-switch {
   display: flex;
-  gap: 6px
+  gap: 6px;
+}
+
+@media (max-width: 480px) {
+  .lang-switch {
+    gap: 4px;
+  }
 }
 
 .lang-btn {
@@ -226,6 +329,15 @@ body {
   color: #fff;
   font-size: 13px;
   transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .lang-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+    border-radius: 6px;
+  }
 }
 
 .lang-btn:hover {
@@ -252,6 +364,14 @@ body {
   font-size: 12px;
   font-weight: 600;
   border: 1px solid var(--glass-border);
+}
+
+@media (max-width: 480px) {
+  .db-status-pill {
+    padding: 5px 10px;
+    font-size: 11px;
+    gap: 6px;
+  }
 }
 
 .status-dot {
@@ -742,6 +862,19 @@ body {
 .google-btn.header-google-btn img {
   width: 14px;
   height: 14px;
+}
+
+@media (max-width: 480px) {
+  .google-btn.header-google-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+    gap: 6px;
+  }
+
+  .google-btn.header-google-btn img {
+    width: 12px;
+    height: 12px;
+  }
 }
 
 .google-btn img {
