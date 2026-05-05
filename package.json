@@ -5,7 +5,9 @@
   "main": "api/server.js",
   "scripts": {
     "start": "node api/server.js",
-    "dev": "node api/server.js"
+    "dev": "node api/server.js",
+    "build": "tailwindcss -i ./public/css/style.css -o ./public/css/style.min.css --minify",
+    "build:watch": "tailwindcss -i ./public/css/style.css -o ./public/css/style.min.css --watch"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",
@@ -33,5 +35,10 @@
   "bugs": {
     "url": "https://github.com/KHAIRIBO/khairibo/issues"
   },
-  "homepage": "https://github.com/KHAIRIBO/khairibo#readme"
+  "homepage": "https://github.com/KHAIRIBO/khairibo#readme",
+  "devDependencies": {
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.14",
+    "tailwindcss": "^4.2.4"
+  }
 }

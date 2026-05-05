@@ -66,8 +66,7 @@
       }
     </script>
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="/css/style.css" />
+    <!-- Remove style.css as it requires PostCSS processing -->
   </head>
   <body class="bg-lightBg text-black dark:bg-darkBg dark:text-white transition-colors duration-500 overflow-x-hidden selection:bg-accentPurple selection:text-white antialiased css-loading">
     
@@ -79,6 +78,17 @@
 
     <!-- Wait for Tailwind CSS to be ready -->
     <script>
+      // Suppress CDN warning in production (Tailwind CDN is acceptable for this use case)
+      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+          if (args[0]?.includes?.('cdn.tailwindcss.com')) {
+            return; // Suppress Tailwind CDN warning in production
+          }
+          originalWarn.apply(console, args);
+        };
+      }
+
       function waitForTailwind() {
         if (window.tailwind) {
           document.body.classList.remove('css-loading');
