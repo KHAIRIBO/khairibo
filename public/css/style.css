@@ -253,6 +253,7 @@ body {
   border: none;
   cursor: pointer;
   padding: 8px 4px;
+  z-index: 101;
 }
 
 .burger-menu span {
@@ -263,9 +264,21 @@ body {
   transition: all 0.3s ease;
 }
 
+.burger-menu:hover span:nth-child(1) {
+  transform: rotate(45deg) translateY(12px);
+}
+
+.burger-menu:hover span:nth-child(2) {
+  opacity: 0;
+}
+
+.burger-menu:hover span:nth-child(3) {
+  transform: rotate(-45deg) translateY(-12px);
+}
+
 @media (max-width: 600px) {
   .burger-menu {
-    display: flex;
+    display: flex !important;
   }
 }
 
