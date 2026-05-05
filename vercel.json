@@ -10,6 +10,6 @@
     { "src": "/api/(.*)",      "dest": "/api/server.js" },
     { "src": "/auth/(.*)",     "dest": "/api/server.js" },
     { "handle": "filesystem" },
-    { "src": "/(.*)",          "dest": "/api/server.js" }
+    { "src": "/(.*)",          "dest": "/index.html" }
   ]
 }
