@@ -138,6 +138,41 @@ const translations = {
 
 
 function App() {
+  // Simple typewriter component for subtitle
+  const Typewriter = ({ text = "", speed = 60 }) => {
+    const [displayed, setDisplayed] = useState("");
+    useEffect(() => {
+      let mounted = true;
+      let i = 0;
+      const tick = () => {
+        if (!mounted) return;
+        if (i <= text.length) {
+          setDisplayed(text.slice(0, i));
+          i++;
+          setTimeout(tick, speed);
+        } else {
+          // pause then clear and restart
+          setTimeout(() => {
+            if (!mounted) return;
+            i = 0;
+            setDisplayed("");
+            setTimeout(tick, 500);
+          }, 1400);
+        }
+      };
+      tick();
+      return () => { mounted = false; };
+    }, [text, speed]);
+    return html`<span>${displayed}</span>`;
+  };
+
+  const projectsRef = useRef(null);
+  const skillsRef = useRef(null);
+  const contactRef = useRef(null);
+
+  const scrollToProjects = () => projectsRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToSkills = () => skillsRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToContact = () => contactRef.current?.scrollIntoView({ behavior: 'smooth' });
   const [lang, setLang] = useState(localStorage.getItem("site_lang") || "en");
   const [dbConnected, setDbConnected] = useState(null); 
   const [route, setRoute] = useState(window.location.pathname || "/");
@@ -459,12 +494,12 @@ function App() {
     }
 
     return html`
-      <main className="hero">
+      <main className="hero" id="home">
         <div className="container hero-grid">
           <section className="hero-content">
-            <p className="intro">${t.intro} ${user ? html`<span>(Welcome, ${user.email.split('@')[0]})</span>` : ""}</p>
-            <h1 className="title">${t.title.split("\n").map((line, idx, arr) => html`${line}${idx < arr.length - 1 ? html`<br />` : null}`)}</h1>
-            <p className="lead">${t.lead}</p>
+            <p className="intro">${t.intro.replace(/,$/, '')} — ${t.title.split("\n").join(' ') } ${user ? html`<span>(Welcome, ${user.email.split('@')[0]})</span>` : ""}</p>
+            <h1 className="title">${t.intro.replace(/,$/, '')} — ${t.title.split("\n").join(' ')}</h1>
+            <p className="lead terminal"><span><${Typewriter} text="Web Developer & Future Software Engineer" /></span></p>
             <div className="cta-row">
               <button className="cta" onClick=${scrollToProjects}>${t.ctaProjects}</button>
               <a href="/Khairi_Bouzakher_CV.pdf" download="Khairi_Bouzakher_CV.pdf" className="cta secondary">${t.ctaCv}</a>
@@ -478,6 +513,7 @@ function App() {
             <${motion.img} 
               src="photo/khairibo.png" 
               alt="Avatar" 
+              className="avatar"
               style=${{ rotateY: mousePos.x * 0.5, rotateX: mousePos.y * -0.5 }}
               animate=${{ y: [0, -15, 0] }}
               transition=${{ 
@@ -490,8 +526,8 @@ function App() {
         </div>
       </main>
 
-      <section className="cv-section">
-        <div className="container">
+      <section className="cv-section" ref=${projectsRef}>
+        <div className="container" ref=${projectsRef}>
           <div className="cv-grid">
             <div className="cv-card profile-card reveal">
               <h2>${t.aboutTitle}</h2>
@@ -527,6 +563,24 @@ function App() {
                 ${t.langList.map(item => html`<span>${item}</span>`)}
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20" ref=${skillsRef} id="skills">
+        <div className="container">
+          <h2 className="title mb-6">Skills</h2>
+          <div className="page-card reveal">
+            <p>Core skills: HTML, CSS, JavaScript, PHP, Python, SQL. Interested in web systems and robotics.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 bg-[#05050a]" ref=${contactRef} id="contact">
+        <div className="container">
+          <h2 className="title mb-6">Contact</h2>
+          <div className="page-card reveal">
+            <p>Want to collaborate? Reach out via email: <a href="mailto:khairi@example.com">khairi@example.com</a></p>
           </div>
         </div>
       </section>
@@ -643,6 +697,7 @@ function App() {
   return html`
 
     <div>
+      <div className="bg-matrix"><div className="code-lines"></div></div>
       <header className="site-header">
         <div className="container header-inner">
           <${motion.a} 
@@ -671,7 +726,9 @@ function App() {
 
             <nav className="main-nav" aria-label="Main navigation">
               <a href="#" onClick=${(e) => { e.preventDefault(); navigate("/"); }}>${t.navHome}</a>
-              <a href="#" onClick=${(e) => { e.preventDefault(); navigate("/blog"); }}>${t.navBlog}</a>
+              <a href="#" onClick=${(e) => { e.preventDefault(); scrollToProjects(); }}>Projects</a>
+              <a href="#" onClick=${(e) => { e.preventDefault(); scrollToSkills(); }}>Skills</a>
+              <a href="#" onClick=${(e) => { e.preventDefault(); scrollToContact(); }}>Contact</a>
               ${user 
                 ? html`
                     <a href="#" onClick=${(e) => { e.preventDefault(); navigate("/dashboard"); }}>${t.navDashboard}</a>
