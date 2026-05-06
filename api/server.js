@@ -39,10 +39,20 @@ if (googleClientEmail && googlePrivateKey) {
       scopes: ["https://www.googleapis.com/auth/drive"],
     });
     driveClient = google.drive({ version: "v3", auth: jwtClient });
-    console.log("Google Drive API initialized successfully");
+    console.log("✅ Google Drive API initialized successfully");
+    console.log(`   Email: ${googleClientEmail}`);
+    console.log(`   Folder ID: ${googleDriveFolderId || "NOT SET - uploads will fail"}`);
   } catch (err) {
-    console.error("Google Drive API initialization failed:", err.message);
+    console.error("❌ Google Drive API initialization failed:", err.message);
+    console.error("   Check that GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY are valid in .env");
   }
+} else {
+  console.warn("⚠️  Google Drive API not configured");
+  console.warn("   Missing: " + 
+    (!googleClientEmail ? "GOOGLE_CLIENT_EMAIL " : "") +
+    (!googlePrivateKey ? "GOOGLE_PRIVATE_KEY " : "")
+  );
+  console.warn("   Follow GOOGLE_DRIVE_COMPLETE_GUIDE.md for setup");
 }
 
 // Multer Setup - Store in memory temporarily
@@ -136,11 +146,42 @@ const clearSessionCookie = (res) => {
 
 // Upload file to Google Drive
 const uploadFileToGoogleDrive = async (fileBuffer, fileName, mimeType) => {
-  if (!driveClient || !googleDriveFolderId) {
-    throw new Error("Google Drive not configured");
+  // Detailed error messages to help with setup
+  if (!googleClientEmail) {
+    console.error("❌ Google Drive not configured: GOOGLE_CLIENT_EMAIL env var is missing");
+    throw new Error(
+      "Google Drive not configured: GOOGLE_CLIENT_EMAIL environment variable is missing. " +
+      "Please follow GOOGLE_DRIVE_COMPLETE_GUIDE.md for setup instructions."
+    );
+  }
+  
+  if (!googlePrivateKey) {
+    console.error("❌ Google Drive not configured: GOOGLE_PRIVATE_KEY env var is missing");
+    throw new Error(
+      "Google Drive not configured: GOOGLE_PRIVATE_KEY environment variable is missing. " +
+      "Please follow GOOGLE_DRIVE_COMPLETE_GUIDE.md for setup instructions."
+    );
+  }
+  
+  if (!googleDriveFolderId) {
+    console.error("❌ Google Drive not configured: GOOGLE_DRIVE_FOLDER_ID env var is missing");
+    throw new Error(
+      "Google Drive not configured: GOOGLE_DRIVE_FOLDER_ID environment variable is missing. " +
+      "Please follow GOOGLE_DRIVE_COMPLETE_GUIDE.md for setup instructions."
+    );
+  }
+  
+  if (!driveClient) {
+    console.error("❌ Google Drive client failed to initialize");
+    throw new Error(
+      "Google Drive API initialization failed. Check that GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY are valid. " +
+      "Ensure the private key contains actual newlines (not escaped \\n). " +
+      "See GOOGLE_DRIVE_COMPLETE_GUIDE.md for details."
+    );
   }
 
   try {
+    console.log(`📤 Uploading file to Google Drive: ${fileName}`);
     const bufferStream = stream.Readable.from([fileBuffer]);
     const response = await driveClient.files.create({
       requestBody: {
@@ -159,6 +200,7 @@ const uploadFileToGoogleDrive = async (fileBuffer, fileName, mimeType) => {
       fields: "id, webViewLink, name, size, createdTime",
     });
 
+    console.log(`✅ File uploaded successfully: ${response.data.id}`);
     return {
       fileId: response.data.id,
       fileName: response.data.name,
@@ -167,7 +209,10 @@ const uploadFileToGoogleDrive = async (fileBuffer, fileName, mimeType) => {
       createdTime: response.data.createdTime,
     };
   } catch (err) {
+    console.error(`❌ Google Drive upload error:`, err.message);
     throw new Error(`Failed to upload file to Google Drive: ${err.message}`);
+  }
+
   }
 };
 
