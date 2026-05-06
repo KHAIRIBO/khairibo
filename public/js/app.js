@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import htm from "htm";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 // Removed framer-motion and lucide-react to avoid runtime ESM incompatibilities in CDN imports.
 // Replaced with native elements and simple emoji/SVG fallbacks.
 
@@ -278,7 +277,6 @@ function App() {
 
   return html`
     <div className="relative w-full min-h-screen font-sans selection:bg-accentBlue selection:text-white">
-      ${SpeedInsights ? html`<${SpeedInsights} style=${{display: 'none'}} />` : null}
       
       {/* Background Decor */}
       <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
@@ -322,7 +320,7 @@ function App() {
                   <span className="w-5 h-5 inline-block">🔑</span>
                   Sign in with Google
                 </button>
-                ${showGoogleSignIn ? html`<div ref=${googleButtonDesktopRef} style="display:none"></div>` : null}
+                ${showGoogleSignIn ? html`<div ref=${googleButtonDesktopRef} style=${{ display: "none" }}></div>` : null}
               </div>
             ` : null}
 
@@ -389,7 +387,7 @@ function App() {
                     </svg>
                     Sign in with Google
                   </button>
-                  ${showGoogleSignIn ? html`<div ref=${googleButtonMobileRef} style="display:none"></div>` : null}
+                  ${showGoogleSignIn ? html`<div ref=${googleButtonMobileRef} style=${{ display: "none" }}></div>` : null}
                 </div>
               ` : null}
 
@@ -627,7 +625,7 @@ function App() {
                 <span>✉️</span>
               </a>
             </div>
-          </${motion.div}>
+          </div>
         </div>
       </section>
 
