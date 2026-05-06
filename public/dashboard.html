@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="User dashboard for secure Google Drive uploads." />
+    <title>KBO | User Dashboard</title>
+
+    <link rel="icon" type="image/png" href="/photo/khairibo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              display: ['Syne', 'sans-serif'],
+            },
+            colors: {
+              darkBg: '#0a0a0a',
+              lightBg: '#f5f5f5',
+              accentBlue: '#3b82f6',
+              accentPurple: '#8b5cf6',
+            },
+          }
+        }
+      }
+    </script>
+  </head>
+  <body class="bg-lightBg text-black dark:bg-darkBg dark:text-white transition-colors duration-500">
+    <div id="root"></div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@18.3.1?target=es2022",
+          "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?target=es2022",
+          "htm": "https://esm.sh/htm@3.1.1?target=es2022"
+        }
+      }
+    </script>
+    <script type="module" src="/js/dashboard.js"></script>
+  </body>
+</html>

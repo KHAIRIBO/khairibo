@@ -212,8 +212,6 @@ const uploadFileToGoogleDrive = async (fileBuffer, fileName, mimeType) => {
     console.error(`❌ Google Drive upload error:`, err.message);
     throw new Error(`Failed to upload file to Google Drive: ${err.message}`);
   }
-
-  }
 };
 
 // Middleware
@@ -270,6 +268,12 @@ app.get("/robots.txt", (req, res) => {
   const base = `${protocol}://${host}`;
   res.header("Content-Type", "text/plain");
   res.send(`User-agent: *\nAllow: /\nDisallow: /dashboard\nDisallow: /admin\n\nSitemap: ${base}/sitemap.xml\n`);
+});
+
+// Friendly route alias for the user dashboard page
+// Keep the dashboard entry point on the main index page.
+app.get("/dashboard", (req, res) => {
+  res.redirect("/");
 });
 
 app.use(express.static(path.join(__dirname, "..", "public")));

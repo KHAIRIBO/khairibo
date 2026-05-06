@@ -46,10 +46,6 @@ function App() {
   const googleButtonDesktopRef = useRef(null);
   const googleButtonMobileRef = useRef(null);
   const showGoogleSignIn = true;
-  const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [uploading, setUploading] = useState(false);
-  const [uploadMessage, setUploadMessage] = useState("");
-  const fileInputRef = useRef(null);
 
   useEffect(() => {
     // Fetch GitHub Repos
@@ -112,7 +108,7 @@ function App() {
         }
 
         await loadCurrentUser();
-        scrollTo("dashboard");
+        window.location.href = "/";
       } catch (err) {
         setAuthError("Google login failed. Please try again.");
       }
@@ -200,39 +196,6 @@ function App() {
     }
   };
 
-  const handleFileUpload = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    setUploadMessage("");
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "File upload failed");
-      }
-
-      const result = await response.json();
-      setUploadedFiles((prev) => [result.file, ...prev]);
-      setUploadMessage(`✅ ${file.name} uploaded successfully to Google Drive!`);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    } catch (err) {
-      setUploadMessage(`❌ Upload failed: ${err.message}`);
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const triggerGoogleSignIn = () => {
     // Try to click the built-in rendered button if present
     try {
@@ -265,7 +228,7 @@ function App() {
     }
   };
 
-  const navItems = user ? ["Home", "Projects", "Skills", "About", "Dashboard", "Contact"] : ["Home", "Projects", "Skills", "About", "Contact"];
+  const navItems = ["Home", "Projects", "Skills", "About", "Contact"];
 
   if (loading) {
     return html`
@@ -327,7 +290,7 @@ function App() {
             ${user ? html`
               <div className="hidden md:flex items-center gap-3">
                 <button
-                  onClick=${() => scrollTo('dashboard')}
+                  onClick=${() => { window.location.href = '/'; }}
                   className="px-4 py-2 rounded-full glass-card text-sm font-semibold hover:text-accentBlue"
                 >
                   Dashboard
@@ -399,7 +362,7 @@ function App() {
               </button>
               ${user ? html`
                 <button
-                  onClick=${() => scrollTo('dashboard')}
+                  onClick=${() => { window.location.href = '/'; }}
                   className="w-full sm:w-auto px-8 py-4 rounded-full bg-accentBlue text-white font-semibold hover:scale-105 transition-transform"
                 >
                   Open Dashboard
@@ -504,102 +467,6 @@ function App() {
           </div>
         </div>
       </section>
-
-      ${user ? html`
-        <section id="dashboard" className="py-32 bg-gray-50 dark:bg-white/[0.02] border-y border-gray-200 dark:border-white/5">
-          <div className="container mx-auto px-6 max-w-5xl">
-            <div className="mb-12 text-center">
-              <h2 className="text-4xl md:text-5xl font-display font-bold mb-4">User Dashboard</h2>
-              <p className="text-gray-600 dark:text-gray-400">Welcome back. Your Google session is active.</p>
-            </div>
-
-            <div className="glass-card rounded-3xl p-8 md:p-10 flex flex-col md:flex-row items-center md:items-start gap-8">
-              <img
-                src=${user.picture || "/photo/khairibo.png"}
-                alt=${user.name || "User avatar"}
-                className="w-24 h-24 rounded-full object-cover border border-gray-200 dark:border-white/10"
-              />
-              <div className="flex-1 text-center md:text-left">
-                <h3 className="text-2xl font-bold mb-2">${user.name || "Google User"}</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">${user.email || ""}</p>
-                <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                  <span className="px-3 py-1 text-xs font-semibold rounded-full bg-green-500/10 text-green-600 border border-green-500/20">Authenticated</span>
-                  <span className="px-3 py-1 text-xs font-semibold rounded-full bg-accentBlue/10 text-accentBlue border border-accentBlue/20">Google Session</span>
-                </div>
-              </div>
-              <button
-                onClick=${handleLogout}
-                className="px-6 py-3 rounded-xl bg-black text-white dark:bg-white dark:text-black font-semibold hover:opacity-90 transition-opacity"
-              >
-                Logout
-              </button>
-            </div>
-
-            {/* File Upload Section */}
-            <div className="mt-12">
-              <h3 className="text-2xl font-bold mb-6">Secure File Upload to Google Drive</h3>
-              <div className="glass-card rounded-3xl p-8">
-                <div className="flex items-center justify-center w-full">
-                  <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <svg className="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
-                      </svg>
-                      <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                        ${uploading ? "Uploading..." : "Click to upload or drag and drop"}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">PDF, Images, Documents up to 50MB</p>
-                    </div>
-                    <input
-                      ref=${fileInputRef}
-                      type="file"
-                      className="hidden"
-                      onChange=${handleFileUpload}
-                      disabled=${uploading}
-                      accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.txt,.docx,.xlsx,.zip"
-                    />
-                  </label>
-                </div>
-
-                ${uploadMessage ? html`
-                  <div className="mt-6 p-4 rounded-lg ${uploadMessage.includes("✅") ? "bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30" : "bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30"}">
-                    <p className="${uploadMessage.includes("✅") ? "text-green-700 dark:text-green-300" : "text-red-700 dark:text-red-300"}">
-                      ${uploadMessage}
-                    </p>
-                  </div>
-                ` : null}
-              </div>
-
-              {/* Uploaded Files List */}
-              ${uploadedFiles.length > 0 ? html`
-                <div className="mt-8">
-                  <h4 className="text-lg font-bold mb-4">Recent Uploads</h4>
-                  <div className="space-y-3">
-                    ${uploadedFiles.slice(0, 5).map((file) => html`
-                      <div key=${file.fileId} className="glass-card p-4 rounded-lg flex items-center justify-between">
-                        <div className="flex-1">
-                          <p className="font-semibold text-sm">${file.fileName}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            ${(file.size / 1024 / 1024).toFixed(2)} MB • ${new Date(file.createdTime).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <a
-                          href=${file.webViewLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-4 py-2 rounded-lg bg-accentBlue text-white text-xs font-semibold hover:opacity-90 transition-opacity"
-                        >
-                          View
-                        </a>
-                      </div>
-                    `)}
-                  </div>
-                </div>
-              ` : null}
-            </div>
-          </div>
-        </section>
-      ` : null}
 
       {/* Contact Section */}
       <section id="contact" className="py-32 relative overflow-hidden">
