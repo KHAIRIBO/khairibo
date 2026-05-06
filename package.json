@@ -1,39 +1,30 @@
 {
-  "name": "kbo-nodejs-app",
-  "version": "1.0.0",
+  "name": "next-app",
+  "version": "0.1.0",
   "private": true,
-  "main": "api/server.js",
   "scripts": {
-    "start": "node api/server.js",
-    "dev": "node api/server.js",
-    "build": "node -e \"console.log('No build required')\""
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
   },
   "dependencies": {
-    "@supabase/ssr": "^0.10.2",
-    "@supabase/supabase-js": "^2.105.1",
-    "@vercel/analytics": "^2.0.1",
-    "@vercel/speed-insights": "^2.0.0",
-    "dotenv": "^16.6.1",
-    "express": "^4.22.1",
+    "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
-    "google-auth-library": "^10.6.2",
-    "googleapis": "^171.4.0",
-    "multer": "^2.1.1"
+    "lucide-react": "^1.14.0",
+    "next": "16.2.5",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tailwind-merge": "^3.5.0"
   },
-  "engines": {
-    "node": "22.x"
-  },
-  "description": "A minimalist, high-end portfolio built with Node.js, Express, and React (via esm.sh).",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/KHAIRIBO/khairibo.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/KHAIRIBO/khairibo/issues"
-  },
-  "homepage": "https://github.com/KHAIRIBO/khairibo#readme"
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.5",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
 }

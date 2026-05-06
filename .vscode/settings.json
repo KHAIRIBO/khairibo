@@ -1,8 +1,0 @@
-{
-    "chat.tools.terminal.autoApprove": {
-        "/^cd c:\\\\laragon\\\\www\\\\kbo ; git add -A ; git commit -m \"Update intro text with full name in Arabic\n\n- Updated Arabic intro text from 'أنا خيري' to 'أنا خيري بوزاخر' for consistency\n- Edropo image is already optimized to max-w-2xl size\n- All language versions now include full 'Khairi Bouzakher' name\"$/": {
-            "approve": true,
-            "matchCommandLine": true
-        }
-    }
-}
