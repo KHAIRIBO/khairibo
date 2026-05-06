@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KBO Admin - Upload</title>
+    <link rel="stylesheet" href="/css/style.css">
+  </head>
+  <body class="min-h-screen bg-lightBg dark:bg-darkBg text-black dark:text-white">
+    <div class="container mx-auto px-6 py-12 max-w-3xl">
+      <div class="glass-card rounded-2xl p-8">
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-2xl font-bold">Admin Upload</h1>
+          <a href="/" class="text-sm text-accentBlue hover:underline">Back to site</a>
+        </div>
+
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Upload files directly to Google Drive. Admin access required.</p>
+
+        <form id="admin-upload-form" class="space-y-4">
+          <div>
+            <label class="block mb-2 text-sm font-semibold">Admin Password</label>
+            <input id="admin-password" type="password" class="w-full p-3 border border-gray-200 rounded-lg bg-white dark:bg-[#0b0b0b]" placeholder="Enter admin password" required />
+          </div>
+
+          <div>
+            <label class="block mb-2 text-sm font-semibold">File</label>
+            <input id="admin-file" type="file" class="w-full" required />
+            <p class="mt-1 text-xs text-gray-500">Allowed: images, PDF, DOCX, XLSX, ZIP. Max 50MB.</p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button id="upload-btn" type="submit" class="px-6 py-3 bg-accentBlue text-white rounded-full font-semibold">Upload</button>
+            <button id="clear-btn" type="button" class="px-4 py-2 border rounded">Clear</button>
+          </div>
+        </form>
+
+        <div id="upload-status" class="mt-6"></div>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById('admin-upload-form');
+      const statusEl = document.getElementById('upload-status');
+      const clearBtn = document.getElementById('clear-btn');
+      clearBtn?.addEventListener('click', () => {
+        document.getElementById('admin-password').value = '';
+        document.getElementById('admin-file').value = '';
+        statusEl.textContent = '';
+      });
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        statusEl.textContent = '';
+        const password = document.getElementById('admin-password').value;
+        const fileInput = document.getElementById('admin-file');
+        const file = fileInput.files[0];
+        if (!file) return statusEl.textContent = 'Please select a file.';
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('adminPassword', password);
+
+        try {
+          statusEl.innerHTML = '<div class="p-3 rounded bg-yellow-50 text-yellow-700">Uploading...</div>';
+          const res = await fetch('/api/admin-upload', {
+            method: 'POST',
+            body: formData,
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Upload failed');
+          statusEl.innerHTML = '<div class="p-3 rounded bg-green-50 text-green-700">Upload succeeded: <a href="'+data.file.webViewLink+'" target="_blank">View</a></div>';
+        } catch (err) {
+          statusEl.innerHTML = '<div class="p-3 rounded bg-red-50 text-red-700">Error: '+err.message+'</div>';
+        }
+      });
+    </script>
+  </body>
+</html>

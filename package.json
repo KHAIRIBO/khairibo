@@ -12,9 +12,13 @@
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.105.1",
     "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
-    "framer-motion": "^12.38.0"
+    "framer-motion": "^12.38.0",
+    "google-auth-library": "^10.6.2",
+    "googleapis": "^171.4.0",
+    "multer": "^2.1.1"
   },
   "engines": {
     "node": "22.x"
