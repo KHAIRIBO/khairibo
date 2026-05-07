@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { LinkedInIcon } from "@/components/BrandIcons";
+import AdminLoginModal from "./AdminLoginModal";
 
 const navLinks = [
   { name: "About", href: "#about" },
@@ -16,6 +17,8 @@ const navLinks = [
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [logoClicks, setLogoClicks] = useState(0);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,6 +27,16 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Triple-click detection logic
+  useEffect(() => {
+    if (logoClicks === 3) {
+      setIsAdminModalOpen(true);
+      setLogoClicks(0);
+    }
+    const timer = setTimeout(() => setLogoClicks(0), 1000);
+    return () => clearTimeout(timer);
+  }, [logoClicks]);
 
   return (
     <motion.nav
@@ -35,14 +48,19 @@ export default function Navbar() {
       }`}
     >
       <div className="container mx-auto px-6 md:px-12 flex justify-between items-center">
-        <Link href="/" className="group relative text-2xl font-bold tracking-tighter">
-          <span className="text-slate-900 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-500 group-hover:to-purple-500 transition-all duration-300">
-            Khairi.
-          </span>
-          <motion.div 
-            className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 group-hover:w-full transition-all duration-300"
-          />
-        </Link>
+        <div 
+          onClick={() => setLogoClicks(prev => prev + 1)}
+          className="cursor-default"
+        >
+          <Link href="/" className="group relative text-2xl font-bold tracking-tighter" onClick={(e) => e.preventDefault()}>
+            <span className="text-slate-900 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-500 group-hover:to-purple-500 transition-all duration-300">
+              KBO.
+            </span>
+            <motion.div 
+              className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 group-hover:w-full transition-all duration-300"
+            />
+          </Link>
+        </div>
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center space-x-8">
@@ -113,6 +131,11 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AdminLoginModal 
+        isOpen={isAdminModalOpen} 
+        onClose={() => setIsAdminModalOpen(false)} 
+      />
     </motion.nav>
   );
 }

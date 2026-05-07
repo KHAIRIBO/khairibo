@@ -10,7 +10,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-start gap-10 mb-12">
           {/* Brand */}
           <div className="max-w-xs">
-            <h2 className="text-2xl font-bold tracking-tight mb-3">Khairi.</h2>
+            <h2 className="text-2xl font-bold tracking-tight mb-3">KBO.</h2>
             <p className="text-slate-400 text-sm leading-relaxed">
               Full Stack Developer & AI Enthusiast. Building fast, modern, and beautiful digital experiences from Tunisia.
             </p>
