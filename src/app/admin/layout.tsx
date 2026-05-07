@@ -14,7 +14,8 @@ import {
   User,
   Menu,
   X,
-  Mail
+  Mail,
+  Bot
 } from "lucide-react";
 import Link from "next/link";
 
