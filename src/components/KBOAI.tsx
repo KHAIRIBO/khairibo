@@ -211,12 +211,17 @@ export default function KBOAI() {
                       <ReactMarkdown 
                         remarkPlugins={[remarkGfm]}
                         components={{
-                          code({node, inline, className, children, ...props}) {
-                            return (
+                          code({node, className, children, ...props}) {
+                            const match = /language-(\w+)/.exec(className || "");
+                            return !match ? (
                               <code className={`${className} bg-slate-100 px-2 py-0.5 rounded-lg text-blue-600 font-bold`} {...props}>
                                 {children}
                               </code>
-                            )
+                            ) : (
+                              <code className={className} {...props}>
+                                {children}
+                              </code>
+                            );
                           },
                           pre({children}) {
                             return (
