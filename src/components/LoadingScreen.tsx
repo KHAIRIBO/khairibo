@@ -43,7 +43,7 @@ export default function LoadingScreen() {
   }, [mouseX, mouseY]);
 
 
-  const logoVariants = {
+  const logoVariants: any = {
     initial: { opacity: 0, filter: "blur(20px)", scale: 0.8, letterSpacing: "-0.1em" },
     animate: { 
       opacity: 1, 
@@ -58,7 +58,7 @@ export default function LoadingScreen() {
     }
   };
 
-  const lineVariants = {
+  const lineVariants: any = {
     initial: { scaleX: 0, opacity: 0 },
     animate: { 
       scaleX: 1, 
