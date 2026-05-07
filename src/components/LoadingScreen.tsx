@@ -52,7 +52,7 @@ export default function LoadingScreen() {
       letterSpacing: "0.05em",
       transition: { 
         duration: 1.2, 
-        ease: [0.16, 1, 0.3, 1], // Custom cubic-bezier for Apple-like feel
+        ease: [0.16, 1, 0.3, 1] as any, // Custom cubic-bezier for Apple-like feel
         delay: 0.2
       } 
     }
