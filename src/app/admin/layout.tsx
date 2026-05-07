@@ -1,4 +1,4 @@
-"use client";
+"use client"; // Admin Dashboard Layout
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
