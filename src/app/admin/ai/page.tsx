@@ -48,14 +48,14 @@ export default function AIAnalytics() {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-      const todayQueries = data.filter(q => new Date(q.created_at) >= today).length;
+      const todayQueries = data.filter((q: any) => new Date(q.created_at) >= today).length;
 
       // Group by day for chart
-      const grouped = data.reduce((acc: any, curr) => {
+      const grouped = data.reduce((acc: any, curr: any) => {
         const date = new Date(curr.created_at).toLocaleDateString();
         acc[date] = (acc[date] || 0) + 1;
         return acc;
-      }, {});
+      }, {} as Record<string, number>);
 
       const chartData = Object.keys(grouped).map(date => ({
         date,

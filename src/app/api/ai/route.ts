@@ -8,7 +8,7 @@ export async function POST(req: Request) {
 
     // Log usage to Supabase (non-blocking)
     if (supabase) {
-      supabase.from("ai_usage").insert({ message }).then(({ error }) => {
+      supabase.from("ai_usage").insert({ message }).then(({ error }: any) => {
         if (error) console.error("Error logging AI usage:", error);
       });
     }

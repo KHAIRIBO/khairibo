@@ -9,13 +9,15 @@ export default function RealtimeNotifications() {
   const [notification, setNotification] = useState<{ title: string; message: string } | null>(null);
 
   useEffect(() => {
+    if (!supabase) return;
+    
     // Listen for new notes as a proxy for "new content"
     const channel = supabase
       .channel('schema-db-changes')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'notes' },
-        (payload) => {
+        (payload: any) => {
           setNotification({
             title: "New Content Added!",
             message: `A new note "${payload.new.title}" was just published.`
@@ -26,7 +28,7 @@ export default function RealtimeNotifications() {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages' },
-        (payload) => {
+        (payload: any) => {
           setNotification({
             title: "New Message Received!",
             message: `${payload.new.name} just sent you a message.`
