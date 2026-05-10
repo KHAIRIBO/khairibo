@@ -27,10 +27,11 @@ interface Message {
 }
 
 const SUGGESTED_QUESTIONS = [
+  "Who is Khairi?",
   "What are Khairi's main skills?",
   "Tell me about his recent projects.",
-  "How can I hire Khairi?",
-  "Show me his tech stack."
+  "How can I contact Khairi?",
+  "What is his tech stack?"
 ];
 
 export default function KBOAI() {

@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import ScrollProgress from "@/components/ScrollProgress";
 import LoadingScreen from "@/components/LoadingScreen";
 import TechNews from "@/components/TechNews";
+import KBOAI from "@/components/KBOAI";
 
 export default function Home() {
   return (
@@ -26,6 +27,7 @@ export default function Home() {
         <Contact />
       </main>
       <Footer />
+      <KBOAI />
     </>
   );
 }

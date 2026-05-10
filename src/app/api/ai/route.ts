@@ -7,12 +7,40 @@ export async function POST(req: Request) {
     const apiKey = process.env.OPENROUTER_API_KEY;
 
     // Log usage to Supabase (non-blocking)
-    supabase.from("ai_usage").insert({ message }).then(({ error }) => {
-      if (error) console.error("Error logging AI usage:", error);
-    });
+    if (supabase) {
+      supabase.from("ai_usage").insert({ message }).then(({ error }) => {
+        if (error) console.error("Error logging AI usage:", error);
+      });
+    }
 
     if (!apiKey) {
-      return NextResponse.json({ error: "host not support ai intgrate sory" }, { status: 500 });
+      const lowerMsg = message.toLowerCase();
+      
+      // Local knowledge base for Khairi
+      const knowledge: Record<string, string> = {
+        "who": "I'm **Khairi Bouzakher**, a Senior Full Stack Developer and UI Designer driven by curiosity and built for performance!",
+        "skill": "Khairi excels in **Next.js, React, Supabase, Tailwind CSS, and Framer Motion**. He's also an expert in UI/UX design.",
+        "project": "Khairi has built several elite projects including this premium portfolio, complex dashboards, and AI-integrated apps. Check the **Projects** section for more!",
+        "contact": "You can reach Khairi via the **Contact** section at the bottom of this page, or through his social links in the footer.",
+        "experience": "Khairi has over **3 years of experience** in the tech industry, blending clean design with robust engineering.",
+        "education": "Khairi is currently a **Computer Science student**, constantly learning and adapting to new technologies.",
+        "stack": "His favorite tech stack includes **Next.js 15, TypeScript, Supabase, and Tailwind CSS**.",
+        "logo": "The KBO logo represents Khairi's commitment to quality and innovation in every line of code.",
+        "hello": "Hii! I'm KBO AI. I can tell you all about Khairi's skills, projects, and experience. What would you like to know?",
+        "hi": "Hii! I'm KBO AI. I can tell you all about Khairi's skills, projects, and experience. What would you like to know?"
+      };
+
+      // Simple keyword matching
+      let response = "I'm sorry, I only know about Khairi's professional background for now. Try asking about his **skills, projects, or experience**!";
+      
+      for (const [key, val] of Object.entries(knowledge)) {
+        if (lowerMsg.includes(key)) {
+          response = val;
+          break;
+        }
+      }
+
+      return new Response(response);
     }
 
     // Using fetch directly as it's more reliable for streaming in Next.js
@@ -28,12 +56,21 @@ export async function POST(req: Request) {
           {
             role: "system",
             content: `You are "KBO AI", the elite personal assistant of Khairi Bouzakher. 
-            Khairi is a Senior Full Stack Developer & UI Designer.
+            Information about Khairi:
+            - Full Name: Khairi Bouzakher.
+            - Role: Senior Full Stack Developer & UI Designer.
+            - Education: Computer Science student.
+            - Experience: 3+ years in the tech industry.
+            - Focus: Building highly interactive, accessible, and performant web applications.
+            - Specialties: Clean code, maintainable architecture, fast learning, and creative problem solving.
+            - Tech Stack: Next.js, React, Supabase, Tailwind CSS, Framer Motion, and UI/UX design.
+            - Personality: Professional, sophisticated, helpful, and innovative.
+            
             Guidelines:
-            - Be helpful, professional, and sophisticated.
-            - Use Markdown for formatting.
-            - Highlight skills in Next.js, React, Supabase, and UI/UX design.
-            - Provide highly accurate and reasoned answers.`
+            - Respond as Khairi's digital twin or personal assistant.
+            - Use Markdown for formatting (bolding, lists, etc.).
+            - Be concise but highly accurate.
+            - If asked something you don't know about Khairi, be honest but stay in character.`
           },
           ...history.map((msg: any) => ({
             role: msg.role === "ai" ? "assistant" : "user",

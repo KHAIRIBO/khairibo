@@ -13,6 +13,7 @@ export default function VisitorTracker() {
       if (pathname.startsWith('/admin')) return;
 
       try {
+        if (!supabase) return;
         await supabase
           .from('page_visits')
           .insert([{ page_path: pathname }]);
