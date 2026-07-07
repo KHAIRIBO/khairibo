@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Omoka Amsterdam — From Feed to Foundation</title>
+<style>
+  :root{
+    --night:#1c1611;
+    --night-2:#241d16;
+    --clay:#a8452f;
+    --ochre:#c89b3c;
+    --millet:#e8c468;
+    --cream:#f2e8d5;
+    --cream-dim:#d8c8a8;
+    --line:rgba(242,232,213,0.14);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--night);
+    color:var(--cream);
+    font-family:'Iowan Old Style','Georgia',serif;
+    overflow-x:hidden;
+  }
+  @font-face{font-family:'system-sans';src:local('Helvetica Neue');}
+  .sans{font-family:-apple-system,'Inter',ui-sans-serif,'Segoe UI',sans-serif;}
+
+  /* ---------- textured backdrop ---------- */
+  .stripe-field{
+    position:fixed; inset:0; z-index:0; opacity:0.05; pointer-events:none;
+    background:
+      repeating-linear-gradient(115deg, var(--ochre) 0px, var(--ochre) 2px, transparent 2px, transparent 46px),
+      repeating-linear-gradient(25deg, var(--clay) 0px, var(--clay) 2px, transparent 2px, transparent 60px);
+  }
+
+  section, header, footer{position:relative; z-index:1;}
+
+  .wrap{max-width:980px; margin:0 auto; padding:0 32px;}
+
+  /* ---------- HERO ---------- */
+  header.hero{
+    min-height:100vh;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:120px 0 80px;
+    border-bottom:1px solid var(--line);
+  }
+  .eyebrow{
+    font-family:'system-sans',sans-serif; letter-spacing:0.32em; text-transform:uppercase;
+    font-size:12px; color:var(--ochre); margin-bottom:28px;
+    opacity:0; animation:riseIn .8s ease forwards; animation-delay:.1s;
+  }
+  h1.title{
+    font-size:clamp(48px,8vw,96px); line-height:0.98; font-weight:400;
+    color:var(--cream); max-width:900px;
+    opacity:0; animation:riseIn .9s ease forwards; animation-delay:.25s;
+  }
+  h1.title em{
+    font-style:italic; color:var(--clay); position:relative;
+  }
+  .hero-sub{
+    margin-top:32px; max-width:560px; font-size:19px; line-height:1.6; color:var(--cream-dim);
+    opacity:0; animation:riseIn .9s ease forwards; animation-delay:.45s;
+  }
+  .hero-meta{
+    display:flex; gap:48px; margin-top:64px; flex-wrap:wrap;
+    opacity:0; animation:riseIn .9s ease forwards; animation-delay:.65s;
+  }
+  .hero-meta div{font-family:'system-sans',sans-serif;}
+  .hero-meta .num{font-size:34px; color:var(--millet); font-family:Georgia,serif;}
+  .hero-meta .lbl{font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--cream-dim); margin-top:4px;}
+
+  @keyframes riseIn{ from{opacity:0; transform:translateY(22px);} to{opacity:1; transform:translateY(0);} }
+
+  /* the stamp: signature element */
+  .stamp{
+    position:absolute; top:110px; right:40px; width:150px; height:150px;
+    border:1.5px solid var(--ochre); border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    transform:rotate(-9deg);
+    opacity:0; animation:stampIn 1s cubic-bezier(.2,1.4,.4,1) forwards; animation-delay:1s;
+  }
+  .stamp::before{
+    content:''; position:absolute; inset:8px; border:1px dashed var(--ochre); border-radius:50%; opacity:0.6;
+  }
+  .stamp span{
+    font-family:'system-sans',sans-serif; font-size:11px; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--millet); text-align:center; line-height:1.9;
+  }
+  @keyframes stampIn{ 0%{opacity:0; transform:rotate(-30deg) scale(.6);} 100%{opacity:1; transform:rotate(-9deg) scale(1);} }
+  @media (max-width:720px){ .stamp{display:none;} }
+
+  /* ---------- SECTION SCAFFOLDING ---------- */
+  section{padding:110px 0; border-bottom:1px solid var(--line);}
+  .kicker{
+    font-family:'system-sans',sans-serif; font-size:12px; letter-spacing:0.28em; text-transform:uppercase;
+    color:var(--clay); margin-bottom:18px; display:flex; align-items:center; gap:14px;
+  }
+  .kicker::after{content:''; height:1px; flex:1; background:var(--line);}
+  h2{font-size:clamp(30px,4.2vw,44px); font-weight:400; color:var(--cream); margin-bottom:22px; max-width:760px;}
+  p.lead{font-size:18px; line-height:1.7; color:var(--cream-dim); max-width:680px;}
+
+  .reveal{opacity:0; transform:translateY(28px); transition:opacity .8s ease, transform .8s ease;}
+  .reveal.in{opacity:1; transform:translateY(0);}
+
+  /* ---------- AUDIT NUMBERS ---------- */
+  .audit-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); margin-top:56px; border:1px solid var(--line);}
+  .audit-cell{background:var(--night); padding:34px 28px;}
+  .audit-cell .big{font-size:46px; color:var(--millet); font-family:Georgia,serif;}
+  .audit-cell .name{font-family:'system-sans',sans-serif; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--cream-dim); margin-top:10px;}
+  .audit-cell .note{font-family:'system-sans',sans-serif; font-size:13px; color:var(--cream-dim); opacity:0.75; margin-top:14px; line-height:1.55;}
+  @media (max-width:720px){.audit-grid{grid-template-columns:1fr;}}
+
+  /* ---------- FUNNEL DIAGRAM ---------- */
+  .funnel{margin-top:70px; display:flex; flex-direction:column; gap:10px;}
+  .funnel-row{display:flex; align-items:center; gap:20px;}
+  .funnel-label{width:190px; flex-shrink:0; font-family:'system-sans',sans-serif; font-size:13px; color:var(--cream-dim); text-align:right;}
+  .funnel-bar-track{flex:1; background:rgba(242,232,213,0.06); height:34px; border-radius:2px; overflow:hidden;}
+  .funnel-bar{
+    height:100%; border-radius:2px;
+    background:linear-gradient(90deg, var(--clay), var(--ochre));
+    width:0%; transition:width 1.4s cubic-bezier(.2,.8,.2,1);
+    display:flex; align-items:center; padding-left:14px;
+    font-family:'system-sans',sans-serif; font-size:12px; color:var(--night); font-weight:600;
+  }
+
+  /* ---------- STRENGTHS / GAPS TABLE ---------- */
+  .split{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); margin-top:56px; border:1px solid var(--line);}
+  .split > div{background:var(--night); padding:36px 32px;}
+  .split h3{font-family:'system-sans',sans-serif; font-size:12px; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:22px;}
+  .split.strengths h3{color:var(--millet);}
+  .split.gaps h3{color:var(--clay);}
+  ul.item-list{list-style:none;}
+  ul.item-list li{
+    font-family:'system-sans',sans-serif; font-size:15px; line-height:1.6; color:var(--cream-dim);
+    padding:12px 0; border-top:1px solid var(--line);
+  }
+  ul.item-list li:first-child{border-top:none;}
+  @media (max-width:720px){.split{grid-template-columns:1fr;}}
+
+  /* ---------- HIGH-END SITE MOCKUP ---------- */
+  .site-mock{background:var(--night);}
+  .mock-nav{
+    display:flex; align-items:center; justify-content:space-between; padding:20px 34px;
+    border-bottom:1px solid var(--line); background:rgba(0,0,0,0.18);
+  }
+  .mock-logo{font-family:Georgia,serif; font-size:17px; letter-spacing:0.14em; color:var(--cream);}
+  .mock-links{display:flex; gap:28px; font-family:'system-sans',sans-serif; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--cream-dim);}
+  .mock-links span:first-child{color:var(--millet);}
+  @media (max-width:600px){.mock-links{display:none;}}
+
+  .mock-hero{
+    position:relative; min-height:400px; display:flex; align-items:center; padding:0 48px; overflow:hidden;
+    background:
+      radial-gradient(ellipse at 78% 25%, rgba(200,155,60,0.20), transparent 55%),
+      radial-gradient(ellipse at 10% 85%, rgba(168,69,47,0.26), transparent 60%),
+      linear-gradient(160deg, #120e0a, #211a13);
+  }
+  .mock-hero::before{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.35));
+    pointer-events:none;
+  }
+  .mock-hero::after{
+    content:''; position:absolute; inset:0;
+    background:repeating-linear-gradient(115deg, rgba(232,196,104,0.04) 0px, rgba(232,196,104,0.04) 1px, transparent 1px, transparent 34px);
+    pointer-events:none;
+  }
+  .mock-hero-inner{position:relative; z-index:1; max-width:500px;}
+  .mock-chip{
+    display:inline-flex; align-items:center; gap:8px; font-family:'system-sans',sans-serif; font-size:10.5px;
+    letter-spacing:0.1em; text-transform:uppercase; color:var(--cream-dim); border:1px solid var(--line);
+    padding:7px 14px; border-radius:20px; margin-bottom:22px; background:rgba(0,0,0,0.2);
+  }
+  .mock-chip::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--ochre); flex-shrink:0;}
+  .mock-eyebrow{font-family:'system-sans',sans-serif; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:var(--ochre); margin-bottom:16px;}
+  .mock-hero-title{font-family:Georgia,serif; font-size:clamp(30px,4.4vw,44px); line-height:1.1; color:var(--cream);}
+  .mock-hero-sub{font-family:'system-sans',sans-serif; font-size:13.5px; color:var(--cream-dim); margin-top:18px; line-height:1.65; max-width:400px;}
+  .mock-btn{
+    display:inline-block; margin-top:28px; padding:13px 28px; background:var(--ochre); color:var(--night);
+    font-family:'system-sans',sans-serif; font-size:11.5px; letter-spacing:0.1em; text-transform:uppercase; border-radius:2px;
+    box-shadow:0 10px 24px -10px rgba(200,155,60,0.55);
+  }
+
+  /* ---------- HERO v2 : reference-layout hero (photo left/right split, matches uploaded reference) ---------- */
+  .hero-v2{
+    position:relative; padding:64px 52px 60px; overflow:visible;
+    display:grid; grid-template-columns:1.08fr 0.92fr; gap:30px; align-items:center;
+    background:linear-gradient(160deg, #100c09, #1c1611 60%);
+  }
+  .hero-v2::before{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(ellipse 620px 420px at 88% 12%, rgba(200,155,60,0.16), transparent 60%);
+  }
+  .hero-v2::after{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(115deg, rgba(232,196,104,0.03) 0px, rgba(232,196,104,0.03) 1px, transparent 1px, transparent 34px);
+  }
+  .hv2-left{position:relative; z-index:1;}
+  .hv2-badge{
+    display:inline-flex; align-items:center; gap:9px; font-family:'system-sans',sans-serif; font-size:10.5px;
+    letter-spacing:0.14em; text-transform:uppercase; color:var(--millet); background:rgba(200,155,60,0.08);
+    border:1px solid rgba(200,155,60,0.35); padding:8px 16px; border-radius:30px; margin-bottom:28px; font-weight:600;
+  }
+  .hv2-badge .dot{width:6px; height:6px; border-radius:50%; background:var(--ochre); flex-shrink:0;}
+  .hv2-title{
+    font-family:Georgia,serif; font-weight:400; font-size:clamp(32px,3.8vw,45px); line-height:1.08; color:var(--cream);
+    letter-spacing:-0.01em;
+  }
+  .hv2-title .accent{color:var(--clay); font-style:normal; position:relative; white-space:nowrap;}
+  .hv2-sub{
+    font-family:'system-sans',sans-serif; font-size:14px; line-height:1.75; color:var(--cream-dim);
+    margin-top:22px; max-width:400px;
+  }
+  .hv2-btn-row{display:flex; align-items:center; gap:16px; margin-top:34px; flex-wrap:wrap;}
+  .hv2-btn{
+    display:inline-flex; align-items:center; gap:9px; padding:15px 26px; background:var(--ochre); color:var(--night);
+    font-family:'system-sans',sans-serif; font-size:12px; letter-spacing:0.06em; text-transform:uppercase;
+    border-radius:4px; font-weight:700; box-shadow:0 16px 30px -14px rgba(200,155,60,0.55);
+  }
+  .hv2-btn.outline{background:transparent; color:var(--cream); border:1px solid var(--line); box-shadow:none; font-weight:600;}
+  .hv2-divider{display:flex; align-items:center; gap:14px; margin-top:46px; margin-bottom:22px;}
+  .hv2-divider span{font-family:'system-sans',sans-serif; font-size:10.5px; letter-spacing:0.16em; text-transform:uppercase; color:var(--cream-dim); opacity:0.7; white-space:nowrap;}
+  .hv2-divider::after{content:''; height:1px; flex:1; background:var(--line);}
+  .hv2-dishes{display:flex; gap:26px;}
+  .hv2-dish{text-align:center;}
+  .hv2-dish-photo{
+    width:64px; height:64px; border-radius:50%; margin:0 auto 11px; position:relative; overflow:hidden;
+    background:radial-gradient(circle at 50% 40%, rgba(232,196,104,0.6), rgba(168,69,47,0.4) 50%, rgba(18,14,10,0.97) 82%);
+    border:2px solid var(--night-2); box-shadow:0 0 0 1.5px rgba(200,155,60,0.4), 0 10px 20px -10px rgba(0,0,0,0.6);
+  }
+  .hv2-dish-name{font-family:'system-sans',sans-serif; font-size:11px; letter-spacing:0.02em; color:var(--cream-dim);}
+
+  .hv2-right{position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; padding-top:6px;}
+  .hv2-photo-frame{
+    position:relative; width:100%; max-width:320px; aspect-ratio:1/1.08; border-radius:24px; overflow:hidden;
+    background:
+      radial-gradient(circle at 50% 38%, rgba(232,196,104,0.55), rgba(168,69,47,0.4) 48%, rgba(15,11,8,0.97) 80%);
+    box-shadow:0 34px 64px -22px rgba(0,0,0,0.65), inset 0 0 0 1px rgba(242,232,213,0.05);
+  }
+  .hv2-photo-frame::before{
+    content:''; position:absolute; inset:15%; border:1.5px solid rgba(242,232,213,0.32); border-radius:50%;
+  }
+  .hv2-photo-frame::after{
+    content:''; position:absolute; inset:31%; border-radius:50%; background:rgba(15,11,8,0.5);
+  }
+  .hv2-float-badge{
+    position:absolute; top:-18px; left:-26px; background:var(--night-2); border:1px solid var(--ochre);
+    border-radius:12px; padding:14px 16px; max-width:142px; box-shadow:0 24px 40px -18px rgba(0,0,0,0.65); z-index:2;
+    display:flex; align-items:center; gap:12px;
+  }
+  .hv2-float-badge .fb-pct{
+    flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%;
+    background:var(--clay); color:var(--cream); font-family:'system-sans',sans-serif; font-size:10.5px; font-weight:700;
+  }
+  .hv2-float-badge .fb-text{font-family:'system-sans',sans-serif; font-size:11.5px; color:var(--cream); line-height:1.35; font-weight:600;}
+  @media (max-width:600px){.hv2-float-badge{left:6px; top:-14px;}}
+
+  .hv2-bottom-row{display:flex; align-items:center; justify-content:space-between; width:100%; max-width:320px; margin-top:24px;}
+  .hv2-nav-arrows{display:flex; gap:9px;}
+  .hv2-arrow{
+    width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-family:'system-sans',sans-serif; font-size:14px; border:1px solid var(--line); color:var(--cream); background:var(--night-2);
+  }
+  .hv2-arrow.active{background:var(--ochre); color:var(--night); border-color:var(--ochre); box-shadow:0 10px 20px -8px rgba(200,155,60,0.6);}
+
+  .hv2-testimonial{display:flex; align-items:center; gap:10px;}
+  .hv2-avatar{width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg, var(--ochre), var(--clay)); flex-shrink:0; border:1.5px solid var(--night-2); box-shadow:0 0 0 1px rgba(200,155,60,0.5);}
+  .hv2-testimonial p{font-family:'system-sans',sans-serif; font-size:11px; line-height:1.4; color:var(--cream-dim); max-width:130px;}
+  @media (max-width:760px){
+    .hero-v2{grid-template-columns:1fr; padding:44px 26px 40px;}
+    .hv2-right{margin-top:80px;}
+    .hv2-btn-row, .hv2-dishes{justify-content:center;}
+    .hv2-left{text-align:center;}
+    .hv2-divider{justify-content:center;}
+  }
+
+  .mock-section{padding:44px; border-bottom:1px solid var(--line);}
+  .mock-section:last-child{border-bottom:none;}
+  .mock-section-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:28px; flex-wrap:wrap; gap:8px;}
+  .mock-section-head h5{font-family:Georgia,serif; font-size:24px; font-weight:400; color:var(--cream);}
+
+  .mock-dish-row{display:grid; grid-template-columns:repeat(3,1fr); gap:26px;}
+  .dish-card{transition:transform .35s ease;}
+  .dish-card:hover{transform:translateY(-6px);}
+  .dish-photo{
+    aspect-ratio:1/1; border-radius:3px; position:relative; overflow:hidden; margin-bottom:16px;
+    background:
+      radial-gradient(circle at 50% 42%, rgba(232,196,104,0.5), rgba(168,69,47,0.35) 45%, rgba(28,22,17,0.92) 78%);
+    box-shadow:inset 0 0 0 1px rgba(242,232,213,0.06), 0 18px 30px -18px rgba(0,0,0,0.6);
+  }
+  .dish-photo::before{
+    content:''; position:absolute; inset:16%; border:1.5px solid rgba(242,232,213,0.4); border-radius:50%;
+  }
+  .dish-photo::after{
+    content:''; position:absolute; inset:32%; border-radius:50%; background:rgba(28,22,17,0.55);
+  }
+  .dish-tag{
+    position:absolute; top:12px; left:12px; z-index:1; font-family:'system-sans',sans-serif; font-size:9.5px;
+    letter-spacing:0.1em; text-transform:uppercase; color:var(--night); background:var(--millet);
+    padding:5px 10px; border-radius:20px; font-weight:600;
+  }
+  .dish-name{font-family:Georgia,serif; font-size:18px; color:var(--cream); display:flex; justify-content:space-between; gap:10px;}
+  .dish-name .price{color:var(--millet); font-size:15px; flex-shrink:0;}
+  .dish-desc{font-family:'system-sans',sans-serif; font-size:12.5px; color:var(--cream-dim); margin-top:7px; line-height:1.55;}
+  @media (max-width:680px){.mock-dish-row{grid-template-columns:1fr;}}
+
+  .mock-story-row{display:grid; grid-template-columns:1fr 1fr; gap:44px; align-items:center;}
+  .mock-quote{font-family:Georgia,serif; font-style:italic; font-size:22px; line-height:1.4; color:var(--cream); position:relative; padding-left:8px;}
+  .mock-quote::before{content:'"'; position:absolute; left:-26px; top:-18px; font-size:64px; color:var(--ochre); opacity:0.35; font-family:Georgia,serif;}
+  .mock-quote-attr{font-family:'system-sans',sans-serif; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ochre); margin-top:14px;}
+  .mock-story-body{font-family:'system-sans',sans-serif; font-size:13.5px; line-height:1.7; color:var(--cream-dim);}
+  @media (max-width:680px){.mock-story-row{grid-template-columns:1fr;}}
+
+  .mock-insta-row{display:grid; grid-template-columns:repeat(5,1fr); gap:9px;}
+  .insta-tile{
+    aspect-ratio:1/1; border-radius:2px; transition:transform .35s ease, box-shadow .35s ease;
+    background:linear-gradient(135deg, rgba(200,155,60,0.35), rgba(168,69,47,0.3));
+  }
+  .insta-tile:nth-child(2n){background:linear-gradient(135deg, rgba(168,69,47,0.35), rgba(28,22,17,0.6));}
+  .insta-tile:nth-child(3n){background:linear-gradient(135deg, rgba(232,196,104,0.4), rgba(28,22,17,0.5));}
+  .insta-tile:hover{transform:scale(1.05); box-shadow:0 14px 26px -14px rgba(0,0,0,0.6);}
+  @media (max-width:680px){.mock-insta-row{grid-template-columns:repeat(3,1fr);}}
+
+  .mock-reserve-banner{
+    background:linear-gradient(120deg, rgba(200,155,60,0.16), rgba(168,69,47,0.12));
+    padding:44px; border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:24px;
+  }
+  .mock-reserve-banner h5{font-family:Georgia,serif; font-size:24px; color:var(--cream); margin-bottom:6px;}
+  .mock-reserve-banner p{font-family:'system-sans',sans-serif; font-size:13px; color:var(--cream-dim);}
+  .mock-widget{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  .mock-field{
+    font-family:'system-sans',sans-serif; font-size:11.5px; color:var(--cream-dim);
+    border:1px solid var(--line); padding:11px 16px; background:rgba(28,22,17,0.5); border-radius:2px;
+  }
+
+  .mock-footer{padding:38px 44px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:30px;}
+  .mock-footer h6{font-family:'system-sans',sans-serif; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ochre); margin-bottom:12px;}
+  .mock-footer p, .mock-footer div.foot-link{font-family:'system-sans',sans-serif; font-size:13px; color:var(--cream-dim); line-height:1.8;}
+  .mock-map{
+    aspect-ratio:16/10; border-radius:2px; position:relative;
+    background:
+      repeating-linear-gradient(0deg, rgba(242,232,213,0.05) 0px, transparent 1px, transparent 22px),
+      repeating-linear-gradient(90deg, rgba(242,232,213,0.05) 0px, transparent 1px, transparent 22px),
+      var(--night-2);
+  }
+  .mock-map::after{
+    content:'📍'; position:absolute; top:50%; left:55%; transform:translate(-50%,-60%); font-size:20px;
+  }
+  @media (max-width:680px){.mock-footer{grid-template-columns:1fr;}}
+
+  /* ---------- SITEMAP DIAGRAM ---------- */
+  .sitemap{margin-top:70px;}
+  .sitemap svg{width:100%; height:auto; display:block;}
+  .node-box{fill:var(--night-2); stroke:var(--line); stroke-width:1;}
+  .node-box.root{stroke:var(--ochre); stroke-width:1.5;}
+  .node-text{font-family:'system-sans',sans-serif; font-size:13px; fill:var(--cream);}
+  .node-sub{font-family:'system-sans',sans-serif; font-size:10px; fill:var(--cream-dim);}
+  .edge{stroke:var(--line); stroke-width:1.2; fill:none;}
+
+  /* ---------- ROADMAP ---------- */
+  .roadmap{margin-top:70px; position:relative; padding-left:36px;}
+  .roadmap::before{content:''; position:absolute; left:6px; top:6px; bottom:6px; width:1px; background:var(--line);}
+  .road-step{position:relative; padding-bottom:44px;}
+  .road-step:last-child{padding-bottom:0;}
+  .road-step::before{
+    content:''; position:absolute; left:-36px; top:4px; width:11px; height:11px; border-radius:50%;
+    background:var(--night); border:2px solid var(--ochre);
+  }
+  .road-step .wk{font-family:'system-sans',sans-serif; font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:var(--clay); margin-bottom:6px;}
+  .road-step h4{font-size:22px; font-weight:400; color:var(--cream); margin-bottom:8px;}
+  .road-step p{font-family:'system-sans',sans-serif; font-size:14.5px; line-height:1.65; color:var(--cream-dim); max-width:560px;}
+
+  /* ---------- CLOSING ---------- */
+  .closing{border-bottom:none; text-align:left;}
+  .closing .big-line{font-size:clamp(30px,5vw,52px); line-height:1.15; max-width:820px; color:var(--cream);}
+  .closing .big-line em{color:var(--ochre); font-style:italic;}
+  .cta-row{margin-top:40px; display:flex; gap:16px; flex-wrap:wrap; font-family:'system-sans',sans-serif;}
+  .cta{
+    display:inline-block; padding:15px 30px; border:1px solid var(--ochre); color:var(--millet);
+    text-decoration:none; font-size:13px; letter-spacing:0.08em; text-transform:uppercase;
+    transition:background .3s ease, color .3s ease;
+  }
+  .cta.filled{background:var(--ochre); color:var(--night);}
+  .cta:hover{background:var(--ochre); color:var(--night);}
+
+  /* ---------- SERP COMPARE ---------- */
+  .serp-compare{display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:56px;}
+  .serp-tag{font-family:'system-sans',sans-serif; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--clay); margin-bottom:14px;}
+  .serp-tag.good{color:var(--millet);}
+  .serp-mock{border:1px solid var(--line); background:var(--night-2); padding:8px;}
+  .serp-row{display:flex; align-items:center; gap:12px; padding:12px 10px; border-bottom:1px solid var(--line); font-family:'system-sans',sans-serif; font-size:13.5px;}
+  .serp-row:last-child{border-bottom:none;}
+  .serp-row .serp-pos{width:20px; color:var(--ochre); font-weight:600;}
+  .serp-row.win .serp-name{color:var(--cream);}
+  .serp-row.faint{opacity:0.4; font-style:italic;}
+  .serp-row .serp-name{color:var(--cream-dim);}
+  .serp-stat{margin-top:14px; font-family:'system-sans',sans-serif; font-size:13px; color:var(--cream-dim);}
+  .serp-stat span{font-size:22px; color:var(--clay); font-family:Georgia,serif; margin-right:6px;}
+  .serp-stat.good span{color:var(--millet);}
+  @media (max-width:720px){.serp-compare{grid-template-columns:1fr;}}
+
+  /* ---------- PATH TO SALE ---------- */
+  .path-to-sale{margin-top:70px; display:flex; align-items:stretch; flex-wrap:wrap; gap:10px;}
+  .path-step{flex:1; min-width:130px; border:1px solid var(--line); background:var(--night-2); padding:20px 14px; text-align:center;}
+  .path-step.highlight{border-color:var(--ochre); background:rgba(200,155,60,0.08);}
+  .path-icon{font-family:Georgia,serif; font-size:22px; color:var(--millet); margin-bottom:10px;}
+  .path-text{font-family:'system-sans',sans-serif; font-size:12.5px; line-height:1.5; color:var(--cream-dim);}
+  .path-step.highlight .path-text{color:var(--cream);}
+  .path-arrow{display:flex; align-items:center; justify-content:center; color:var(--line); font-size:18px; padding:0 2px;}
+  @media (max-width:720px){.path-arrow{display:none;}}
+
+  /* ---------- REVENUE BOX ---------- */
+  .revenue-box{margin-top:56px; border:1px solid var(--ochre); padding:32px; background:rgba(200,155,60,0.05);}
+  .rev-line{display:flex; justify-content:space-between; align-items:baseline; padding:12px 0; border-bottom:1px solid var(--line); font-family:'system-sans',sans-serif;}
+  .rev-line:last-of-type{border-bottom:none;}
+  .rev-label{font-size:14px; color:var(--cream-dim);}
+  .rev-num{font-family:Georgia,serif; font-size:20px; color:var(--millet);}
+  .rev-line.total .rev-label{color:var(--cream); font-weight:600;}
+  .rev-line.total .rev-num{font-size:26px; color:var(--ochre);}
+  .rev-note{font-family:'system-sans',sans-serif; font-size:13px; line-height:1.6; color:var(--cream-dim); margin-top:18px; opacity:0.85;}
+
+  /* ---------- REGISTRY CARD ---------- */
+  .registry-card{margin-top:48px; border:1px solid var(--line); background:var(--night-2); padding:32px;}
+  .registry-row{display:flex; justify-content:space-between; align-items:baseline; padding:12px 0; border-bottom:1px solid var(--line); font-family:'system-sans',sans-serif; gap:16px;}
+  .registry-row:last-of-type{border-bottom:none;}
+  .r-label{font-size:12.5px; letter-spacing:0.05em; text-transform:uppercase; color:var(--cream-dim); opacity:0.75; flex-shrink:0;}
+  .r-value{font-size:15px; color:var(--cream); text-align:right;}
+
+  /* ---------- SOLUTION CHECKLIST ---------- */
+  .solution-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); margin-top:56px; border:1px solid var(--line);}
+  .solution-cell{background:var(--night); padding:26px 24px; display:flex; gap:14px; align-items:flex-start;}
+  .solution-check{
+    flex-shrink:0; width:26px; height:26px; border-radius:50%; border:1.5px solid var(--ochre);
+    color:var(--millet); display:flex; align-items:center; justify-content:center; font-size:14px; font-family:'system-sans',sans-serif;
+  }
+  .solution-cell .s-text{font-family:'system-sans',sans-serif; font-size:14.5px; line-height:1.5; color:var(--cream-dim); padding-top:3px;}
+  .solution-cell .s-text strong{color:var(--cream); display:block; font-size:15px; margin-bottom:2px;}
+  @media (max-width:720px){.solution-grid{grid-template-columns:1fr;}}
+
+  /* ---------- CONCEPT PREVIEW (browser mockup) ---------- */
+  .concept-note{
+    display:flex; align-items:flex-start; gap:14px; margin-top:20px; padding:16px 20px;
+    background:rgba(200,60,40,0.1); border:1px solid rgba(210,70,50,0.5); border-left:3px solid #d24632;
+    border-radius:4px; max-width:680px;
+  }
+  .concept-note .cn-icon{
+    flex-shrink:0; width:22px; height:22px; border-radius:50%; background:#d24632; color:var(--cream);
+    font-family:'system-sans',sans-serif; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center;
+  }
+  .concept-note p{font-family:'system-sans',sans-serif; font-size:13px; line-height:1.6; color:#f0c4ba;}
+  .concept-note p strong{color:#f2a396; text-transform:uppercase; letter-spacing:0.04em; font-size:11.5px;}
+
+  .browser-frame{
+    margin-top:60px; border:1px solid var(--line); background:var(--night-2); border-radius:10px; overflow:hidden;
+    box-shadow:0 40px 80px -30px rgba(0,0,0,0.55), 0 0 0 1px rgba(242,232,213,0.03);
+  }
+  .browser-chrome{display:flex; align-items:center; gap:7px; padding:14px 18px; border-bottom:1px solid var(--line); background:rgba(0,0,0,0.22);}
+  .browser-dot{width:9px; height:9px; border-radius:50%; background:var(--line);}
+  .browser-url{margin-left:12px; font-family:'system-sans',sans-serif; font-size:11.5px; color:var(--cream-dim); opacity:0.6;}
+  .preview-stack{display:flex; flex-direction:column;}
+  .preview-block{padding:26px 30px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;}
+  .preview-block:last-child{border-bottom:none;}
+  .preview-block .pb-label{font-family:'system-sans',sans-serif; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--clay); margin-bottom:6px;}
+  .preview-block .pb-title{font-size:21px; color:var(--cream); font-family:Georgia,serif;}
+  .preview-block .pb-desc{font-family:'system-sans',sans-serif; font-size:13px; color:var(--cream-dim); margin-top:4px; max-width:420px;}
+  .preview-block.hero-block{background:linear-gradient(135deg, rgba(200,155,60,0.08), transparent);}
+  .pb-visual{flex-shrink:0; font-family:'system-sans',sans-serif; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--night); background:var(--ochre); padding:9px 16px; border-radius:2px;}
+  .pb-dots{display:flex; gap:6px;}
+  .pb-swatch{width:44px; height:44px; border-radius:3px; background:var(--night); border:1px solid var(--line);}
+  @media (max-width:600px){.preview-block{flex-direction:column; align-items:flex-start;}}
+
+  /* ---------- BEFORE / AFTER JOURNEY ---------- */
+  .journey{margin-top:60px; display:flex; flex-direction:column; gap:34px;}
+  .journey-row .j-tag{font-family:'system-sans',sans-serif; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; margin-bottom:16px;}
+  .journey-row.before .j-tag{color:var(--clay);}
+  .journey-row.after .j-tag{color:var(--millet);}
+  .journey-flow{display:flex; align-items:center; flex-wrap:wrap; gap:8px;}
+  .j-step{
+    font-family:'system-sans',sans-serif; font-size:12.5px; padding:14px 16px; border:1px solid var(--line);
+    background:var(--night-2); color:var(--cream-dim); text-align:center; flex:1; min-width:110px;
+  }
+  .journey-row.after .j-step{border-color:rgba(200,155,60,0.4); color:var(--cream);}
+  .j-step.dead{opacity:0.5; font-style:italic; border-style:dashed; color:var(--clay);}
+  .j-step.win{border-color:var(--ochre); background:rgba(200,155,60,0.1); color:var(--millet); font-weight:600;}
+  .j-arrow{color:var(--line); font-size:16px; flex-shrink:0;}
+  .journey-row.after .j-arrow{color:var(--ochre);}
+  @media (max-width:720px){.journey-flow{flex-direction:column; align-items:stretch;} .j-arrow{transform:rotate(90deg); align-self:center;}}
+
+  /* ---------- TIMELINE (3-week) ---------- */
+  .timeline-weeks{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); margin-top:60px; border:1px solid var(--line);}
+  .week-card{background:var(--night); padding:30px 26px;}
+  .week-card .wk-num{font-family:Georgia,serif; font-size:13px; color:var(--clay); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:10px;}
+  .week-card h4{font-size:22px; font-weight:400; color:var(--cream); margin-bottom:16px;}
+  .week-card ul{list-style:none;}
+  .week-card li{
+    font-family:'system-sans',sans-serif; font-size:13.5px; color:var(--cream-dim); padding:9px 0 9px 20px; position:relative; border-top:1px solid var(--line);
+  }
+  .week-card li:first-child{border-top:none;}
+  .week-card li::before{content:'—'; position:absolute; left:0; color:var(--ochre);}
+  @media (max-width:720px){.timeline-weeks{grid-template-columns:1fr;}}
+
+  /* ---------- INVESTMENT ---------- */
+  .invest-wrap{display:grid; grid-template-columns:1.3fr 1fr; gap:1px; background:var(--line); margin-top:60px; border:1px solid var(--ochre);}
+  .invest-main{background:var(--night); padding:44px 40px;}
+  .invest-main .inv-eyebrow{font-family:'system-sans',sans-serif; font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:var(--clay); margin-bottom:14px;}
+  .invest-main .inv-price{font-family:Georgia,serif; font-size:52px; color:var(--millet); line-height:1;}
+  .invest-main .inv-price sup{font-size:18px; color:var(--cream-dim); font-family:'system-sans',sans-serif; margin-left:8px;}
+  .invest-main .inv-includes{margin-top:28px; list-style:none;}
+  .invest-main .inv-includes li{
+    font-family:'system-sans',sans-serif; font-size:14.5px; color:var(--cream-dim); padding:11px 0; border-top:1px solid var(--line);
+  }
+  .invest-main .inv-includes li:first-child{border-top:none;}
+  .invest-main .inv-includes li::before{content:'✓  '; color:var(--ochre);}
+  .invest-side{background:var(--night-2); padding:44px 36px; display:flex; flex-direction:column; justify-content:center;}
+  .invest-side .inv-eyebrow{font-family:'system-sans',sans-serif; font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:var(--millet); margin-bottom:14px;}
+  .invest-side .inv-price{font-family:Georgia,serif; font-size:32px; color:var(--cream);}
+  .invest-side .inv-price sup{font-size:13px; color:var(--cream-dim); font-family:'system-sans',sans-serif;}
+  .invest-side p{font-family:'system-sans',sans-serif; font-size:13.5px; line-height:1.6; color:var(--cream-dim); margin-top:16px;}
+  @media (max-width:720px){.invest-wrap{grid-template-columns:1fr;}}
+
+  /* ---------- WHY KBO PILLARS ---------- */
+  .pillars{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); margin-top:60px; border:1px solid var(--line);}
+  .pillar{background:var(--night); padding:36px 28px;}
+  .pillar .p-num{font-family:Georgia,serif; font-size:15px; color:var(--clay); margin-bottom:16px;}
+  .pillar h4{font-size:23px; font-weight:400; color:var(--cream); margin-bottom:12px;}
+  .pillar p{font-family:'system-sans',sans-serif; font-size:14px; line-height:1.6; color:var(--cream-dim);}
+  @media (max-width:720px){.pillars{grid-template-columns:1fr;}}
+
+  /* ---------- FINAL CTA UPGRADE ---------- */
+  .cta.primary{background:var(--ochre); color:var(--night); border-color:var(--ochre); font-weight:600;}
+  .cta.primary:hover{background:var(--millet); border-color:var(--millet);}
+  .cta.secondary{border-color:var(--line); color:var(--cream-dim);}
+  .cta.secondary:hover{background:var(--cream); color:var(--night); border-color:var(--cream);}
+
+  footer{padding:40px 0 60px;}
+  footer p{font-family:'system-sans',sans-serif; font-size:12px; color:var(--cream-dim); opacity:0.6;}
+</style>
+</head>
+<body>
+<div class="stripe-field"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="stamp"><span>Est. reservation<br>only · Weekends</span></div>
+    <p class="eyebrow">Digital Presence Audit — Prepared for Omoka Amsterdam</p>
+    <h1 class="title">You built the <em>table</em>.<br>Now build the <em>house</em>.</h1>
+    <p class="hero-sub">You didn't get this far by luck. The food earned it — a weekend crowd that keeps coming back and an Instagram following that keeps climbing. That's real demand, and right now it has nowhere to land. A website is how you finally own it: get found on Google, turn tourists into walk-ins, and turn every one of those followers into a booked table. The hard part — making people want Omoka — is already done. This is the part that makes it pay off.</p>
+    <div class="hero-meta">
+      <div><div class="num">2,545</div><div class="lbl">Followers</div></div>
+      <div><div class="num">17</div><div class="lbl">Posts, total</div></div>
+      <div><div class="num">2×</div><div class="lbl">Weekly service</div></div>
+      <div><div class="num">1</div><div class="lbl">Channel you control</div></div>
+    </div>
+  </div>
+</header>
+
+<section id="audit">
+  <div class="wrap">
+    <div class="kicker">01 · The account today</div>
+    <h2 class="reveal">A strong signal, on a rented frequency.</h2>
+    <p class="lead reveal">@omoka_amsterdam has done the hard part — real demand, word of mouth, a following well beyond typical pop-up size. But every one of those numbers lives inside Instagram's system, not yours.</p>
+
+    <div class="audit-grid reveal">
+      <div class="audit-cell">
+        <div class="big">2,545</div>
+        <div class="name">Followers</div>
+        <div class="note">A healthy audience for a weekends-only pop-up — proof the food and the story are working.</div>
+      </div>
+      <div class="audit-cell">
+        <div class="big">17</div>
+        <div class="name">Total posts</div>
+        <div class="note">Low post volume relative to followers means new visitors land on a thin, hard-to-browse story.</div>
+      </div>
+      <div class="audit-cell">
+        <div class="big">120</div>
+        <div class="name">Following</div>
+        <div class="note">A tight, curated network (chefs, food pages, venues) — good for credibility, but not for discovery.</div>
+      </div>
+    </div>
+
+    <div class="funnel reveal">
+      <div class="funnel-row">
+        <div class="funnel-label">Sees the food (reel view)</div>
+        <div class="funnel-bar-track"><div class="funnel-bar" data-w="100">100</div></div>
+      </div>
+      <div class="funnel-row">
+        <div class="funnel-label">Follows the account</div>
+        <div class="funnel-bar-track"><div class="funnel-bar" data-w="62">62</div></div>
+      </div>
+      <div class="funnel-row">
+        <div class="funnel-label">Finds the menu</div>
+        <div class="funnel-bar-track"><div class="funnel-bar" data-w="24">24</div></div>
+      </div>
+      <div class="funnel-row">
+        <div class="funnel-label">Finds this week's location/date</div>
+        <div class="funnel-bar-track"><div class="funnel-bar" data-w="18">18</div></div>
+      </div>
+      <div class="funnel-row">
+        <div class="funnel-label">Actually books a table</div>
+        <div class="funnel-bar-track"><div class="funnel-bar" data-w="9">9</div></div>
+      </div>
+    </div>
+    <p style="font-family:'system-sans',sans-serif; font-size:12.5px; color:var(--cream-dim); opacity:0.7; margin-top:14px;">Illustrative attention funnel — the pattern common to venues that run reservations through a bio link and a rotating "link in bio" instead of a stable site.</p>
+  </div>
+</section>
+
+<section id="strengths">
+  <div class="wrap">
+    <div class="kicker">02 · What's working, what's leaking</div>
+    <h2 class="reveal">The brand is ready. The infrastructure isn't.</h2>
+
+    <div class="split reveal">
+      <div class="strengths">
+        <h3>Strengths on Instagram</h3>
+        <ul class="item-list">
+          <li>Distinct cuisine — Mafé, Thieboudienne — that stands out in Amsterdam's food scene.</li>
+          <li>Follower count well above typical weekend pop-ups.</li>
+          <li>Strong visual identity in reels: warmth, community, the room at night.</li>
+          <li>A clear, consistent rhythm — Friday & Saturday — that regulars plan around.</li>
+        </ul>
+      </div>
+      <div class="gaps">
+        <h3>What a website closes</h3>
+        <ul class="item-list">
+          <li>No permanent menu — dishes live in captions and disappear.</li>
+          <li>Location has moved (Papaverweg → Woodies at Berlin); nothing anchors "where we are now."</li>
+          <li>Reservations depend on a single bio link, easy to lose or misconfigure.</li>
+          <li>Zero search visibility — "Senegalese food Amsterdam" won't surface the account.</li>
+          <li>No owned email or contact list — every follower is one algorithm change from unreachable.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="solution">
+  <div class="wrap">
+    <div class="kicker">03 · The solution</div>
+    <h2 class="reveal">A premium digital home, built by KBO.</h2>
+    <p class="lead reveal">KBO designs and builds the website that turns everything Omoka has already earned — the following, the word of mouth, the reputation on the plate — into a permanent, professional presence you own outright. Not a template. A digital home built around this restaurant, this cuisine, this crowd.</p>
+
+    <div class="solution-grid reveal">
+      <div class="solution-cell"><div class="solution-check">✓</div><div class="s-text"><strong>Modern responsive website</strong>Built to feel as premium as the room itself, on any screen.</div></div>
+      <div class="solution-cell"><div class="solution-check">✓</div><div class="s-text"><strong>Mobile-first design</strong>Most tourists find you on a phone — that's where the design starts.</div></div>
+      <div class="solution-cell"><div class="solution-check">✓</div><div class="s-text"><strong>Digital menu</strong>Always current, always readable, never buried in an old caption.</div></div>
+      <div class="solution-cell"><div class="solution-check">✓</div><div class="s-text"><strong>Reservation system</strong>A booking flow you own — no third-party link that can break or disappear.</div></div>
+      <div class="solution-cell"><div class="solution-check">✓</div><div class="s-text"><strong>Google Maps integration</strong>Exact location, hours, and directions — zero guesswork for first-timers.</div></div>
+      <div class="solution-cell"><div class="solution-check">✓</div><div class="s-text"><strong>Instagram integration</strong>Your feed lives on the site too — one home for both audiences.</div></div>
+      <div class="solution-cell"><div class="solution-check">✓</div><div class="s-text"><strong>Local SEO setup</strong>Built to be found for "African food Amsterdam" from day one.</div></div>
+      <div class="solution-cell"><div class="solution-check">✓</div><div class="s-text"><strong>Analytics tracking</strong>Real numbers on who's visiting, from where, and what they click.</div></div>
+      <div class="solution-cell"><div class="solution-check">✓</div><div class="s-text"><strong>Easy weekly updates</strong>Change the menu or this week's hours yourself, in minutes.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="preview">
+  <div class="wrap">
+    <div class="kicker">04 · Website concept preview</div>
+    <h2 class="reveal">Here's the shape of it.</h2>
+    <p class="lead reveal">A single, premium page — the same restraint and warmth as the room at Woodies at Berlin, translated onto a screen.</p>
+    <div class="concept-note reveal">
+      <span class="cn-icon">!</span>
+      <p><strong>Note:</strong> this is a concept mock-up to illustrate layout and content structure only — final colors, photography, and copy will be refined with you in Week 1.</p>
+    </div>
+
+    <div class="browser-frame reveal">
+      <div class="browser-chrome">
+        <div class="browser-dot"></div><div class="browser-dot"></div><div class="browser-dot"></div>
+        <div class="browser-url">omokaamsterdam.com</div>
+      </div>
+      <div class="site-mock">
+
+        <div class="mock-nav">
+          <div class="mock-logo">OMOKA</div>
+          <div class="mock-links"><span>Story</span><span>Menu</span><span>Reserve</span><span>Contact</span></div>
+        </div>
+
+        <div class="hero-v2">
+          <div class="hv2-left">
+            <div class="hv2-badge"><span class="dot"></span>Senegalese · Amsterdam</div>
+            <h3 class="hv2-title">Be the first<br>to taste <span class="accent">Thieboudienne</span><br>this weekend</h3>
+            <p class="hv2-sub">Friday &amp; Saturday, 17:00 – 00:00 aboard Woodies at Berlin, NDSM. Reserve ahead — if we can't seat you within 15 minutes of your slot, the round of drinks is on us.</p>
+            <div class="hv2-btn-row">
+              <div class="hv2-btn">Reserve a table  →</div>
+              <div class="hv2-btn outline">View menu</div>
+            </div>
+            <div class="hv2-divider"><span>Fan favourites</span></div>
+            <div class="hv2-dishes">
+              <div class="hv2-dish"><div class="hv2-dish-photo"></div><div class="hv2-dish-name">Thieboudienne</div></div>
+              <div class="hv2-dish"><div class="hv2-dish-photo"></div><div class="hv2-dish-name">Mafé</div></div>
+              <div class="hv2-dish"><div class="hv2-dish-photo"></div><div class="hv2-dish-name">Grilled fish</div></div>
+            </div>
+          </div>
+          <div class="hv2-right">
+            <div class="hv2-photo-frame">
+              <div class="hv2-float-badge">
+                <div class="fb-pct">10%</div>
+                <div class="fb-text">Off for tables of 4+, this weekend</div>
+              </div>
+            </div>
+            <div class="hv2-bottom-row">
+              <div class="hv2-nav-arrows">
+                <div class="hv2-arrow">←</div>
+                <div class="hv2-arrow active">→</div>
+              </div>
+              <div class="hv2-testimonial">
+                <div class="hv2-avatar"></div>
+                <p>"Booked in under a minute."</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock-section">
+          <div class="mock-section-head"><h5>Signature dishes</h5></div>
+          <div class="mock-dish-row">
+            <div class="dish-card">
+              <div class="dish-photo"><div class="dish-tag">Chef's pick</div></div>
+              <div class="dish-name">Thieboudienne <span class="price">€24</span></div>
+              <div class="dish-desc">Senegal's national dish — fish, rice, and slow-cooked vegetables.</div>
+            </div>
+            <div class="dish-card">
+              <div class="dish-photo"></div>
+              <div class="dish-name">Mafé <span class="price">€22</span></div>
+              <div class="dish-desc">Peanut stew, slow-braised, served with fonio or rice.</div>
+            </div>
+            <div class="dish-card">
+              <div class="dish-photo"></div>
+              <div class="dish-name">Whole Grilled Fish <span class="price">€28</span></div>
+              <div class="dish-desc">Market fish, West African spice rub, charred over the grill.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock-section">
+          <div class="mock-story-row">
+            <div>
+              <div class="mock-quote">"The only spot in the city with Mafé and Thieboudienne."</div>
+              <div class="mock-quote-attr">— Amsterdam food creator</div>
+            </div>
+            <div class="mock-story-body">Omoka brings West African cooking to a ship on the IJ — cocktails, wine, music, and a menu built around dishes Amsterdam rarely sees done right. Every weekend, the same table, the same warmth.</div>
+          </div>
+        </div>
+
+        <div class="mock-section">
+          <div class="mock-section-head"><h5>@omoka_amsterdam</h5></div>
+          <div class="mock-insta-row">
+            <div class="insta-tile"></div><div class="insta-tile"></div><div class="insta-tile"></div><div class="insta-tile"></div><div class="insta-tile"></div>
+          </div>
+        </div>
+
+        <div class="mock-reserve-banner">
+          <div><h5>Book your table</h5><p>Friday &amp; Saturday · Woodies at Berlin</p></div>
+          <div class="mock-widget">
+            <div class="mock-field">Date</div>
+            <div class="mock-field">Party size</div>
+            <div class="mock-btn" style="margin-top:0;">Reserve →</div>
+          </div>
+        </div>
+
+        <div class="mock-footer">
+          <div>
+            <h6>Location</h6>
+            <p>Ms. van Riemsdijkweg 306<br>Amsterdam Noord</p>
+          </div>
+          <div>
+            <h6>Hours</h6>
+            <p>Friday &amp; Saturday<br>17:00 – 00:00</p>
+          </div>
+          <div class="mock-map"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sitemap">
+  <div class="wrap">
+    <div class="kicker">05 · Site structure</div>
+    <h2 class="reveal">Small, fast, and built around the two things people actually need.</h2>
+    <p class="lead reveal">Not a big build. One page can do the job — as long as it answers "what's on the menu" and "how do I get a seat" before anything else.</p>
+
+    <div class="sitemap reveal">
+      <svg viewBox="0 0 940 300" xmlns="http://www.w3.org/2000/svg">
+        <path class="edge" d="M 470 60 L 470 100"/>
+        <path class="edge" d="M 470 100 L 140 160"/>
+        <path class="edge" d="M 470 100 L 340 160"/>
+        <path class="edge" d="M 470 100 L 600 160"/>
+        <path class="edge" d="M 470 100 L 800 160"/>
+        <path class="edge" d="M 140 220 L 140 260"/>
+        <path class="edge" d="M 340 220 L 340 260"/>
+
+        <rect class="node-box root" x="380" y="16" width="180" height="44" rx="3"/>
+        <text class="node-text" x="470" y="43" text-anchor="middle">omokaamsterdam.com</text>
+
+        <rect class="node-box" x="60" y="160" width="160" height="56" rx="3"/>
+        <text class="node-text" x="140" y="184" text-anchor="middle">This Weekend</text>
+        <text class="node-sub" x="140" y="202" text-anchor="middle">Date · address · hours</text>
+
+        <rect class="node-box" x="260" y="160" width="160" height="56" rx="3"/>
+        <text class="node-text" x="340" y="184" text-anchor="middle">Menu</text>
+        <text class="node-sub" x="340" y="202" text-anchor="middle">Dishes, prices, allergens</text>
+
+        <rect class="node-box" x="520" y="160" width="160" height="56" rx="3"/>
+        <text class="node-text" x="600" y="184" text-anchor="middle">Reserve</text>
+        <text class="node-sub" x="600" y="202" text-anchor="middle">Table booking form</text>
+
+        <rect class="node-box" x="720" y="160" width="160" height="56" rx="3"/>
+        <text class="node-text" x="800" y="184" text-anchor="middle">Story + Feed</text>
+        <text class="node-sub" x="800" y="202" text-anchor="middle">Instagram embed</text>
+
+        <rect class="node-box" x="60" y="260" width="160" height="32" rx="3"/>
+        <text class="node-sub" x="140" y="281" text-anchor="middle">Auto-updates weekly</text>
+
+        <rect class="node-box" x="260" y="260" width="160" height="32" rx="3"/>
+        <text class="node-sub" x="340" y="281" text-anchor="middle">One page, easy to edit</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section id="journey">
+  <div class="wrap">
+    <div class="kicker">06 · Before vs. after</div>
+    <h2 class="reveal">Same demand. Completely different outcome.</h2>
+    <p class="lead reveal">The food doesn't change. What changes is whether the journey from "I heard about this place" to "I'm at the table" actually completes.</p>
+
+    <div class="journey reveal">
+      <div class="journey-row before">
+        <div class="j-tag">Before — Instagram only</div>
+        <div class="journey-flow">
+          <div class="j-step">Customer</div>
+          <div class="j-arrow">→</div>
+          <div class="j-step">Instagram</div>
+          <div class="j-arrow">→</div>
+          <div class="j-step">Scroll</div>
+          <div class="j-arrow">→</div>
+          <div class="j-step dead">Lost opportunity</div>
+        </div>
+      </div>
+      <div class="journey-row after">
+        <div class="j-tag">After — with omokaamsterdam.com</div>
+        <div class="journey-flow">
+          <div class="j-step">Google / Instagram / Word of mouth</div>
+          <div class="j-arrow">→</div>
+          <div class="j-step">Website</div>
+          <div class="j-arrow">→</div>
+          <div class="j-step">Menu</div>
+          <div class="j-arrow">→</div>
+          <div class="j-step">Reservation</div>
+          <div class="j-arrow">→</div>
+          <div class="j-step win">Customer, seated</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="search">
+  <div class="wrap">
+    <div class="kicker">07 · The tourist you're already losing</div>
+    <h2 class="reveal">Right now, Google has nothing of yours to show them.</h2>
+    <p class="lead reveal">Every week, someone lands in Amsterdam and types "best African food Amsterdam" or "Senegalese restaurant Amsterdam" into Google before they've even unpacked. Without a website, that search can't find Omoka — no matter how good the food is or how many followers you have.</p>
+
+    <div class="serp-compare reveal">
+      <div class="serp-col">
+        <div class="serp-tag">Without a site</div>
+        <div class="serp-mock">
+          <div class="serp-row win"><span class="serp-pos">1</span><span class="serp-name">Competitor Pop-up</span></div>
+          <div class="serp-row"><span class="serp-pos">2</span><span class="serp-name">Restaurant Guide — "Top 10 African"</span></div>
+          <div class="serp-row"><span class="serp-pos">3</span><span class="serp-name">TripAdvisor listing</span></div>
+          <div class="serp-row faint"><span class="serp-pos">—</span><span class="serp-name">Omoka: not indexed, not found</span></div>
+        </div>
+        <div class="serp-stat"><span>0%</span> of that search traffic</div>
+      </div>
+      <div class="serp-col">
+        <div class="serp-tag good">With omokaamsterdam.com</div>
+        <div class="serp-mock">
+          <div class="serp-row win"><span class="serp-pos">1</span><span class="serp-name">Omoka Amsterdam — Senegalese pop-up</span></div>
+          <div class="serp-row"><span class="serp-pos">2</span><span class="serp-name">Competitor Pop-up</span></div>
+          <div class="serp-row"><span class="serp-pos">3</span><span class="serp-name">Restaurant Guide — "Top 10 African"</span></div>
+        </div>
+        <div class="serp-stat good"><span>~28%</span> of clicks go to position 1</div>
+      </div>
+    </div>
+    <p style="font-family:'system-sans',sans-serif; font-size:12.5px; color:var(--cream-dim); opacity:0.7; margin-top:18px;">Illustrative — but the pattern is real and well documented: the #1 organic result captures roughly a quarter of all clicks; page two is effectively invisible. A site with your name, cuisine, and neighborhood in the copy is what makes ranking possible at all.</p>
+
+    <div class="path-to-sale reveal">
+      <div class="path-step"><div class="path-icon">1</div><div class="path-text">Tourist searches<br>"African food Amsterdam"</div></div>
+      <div class="path-arrow">→</div>
+      <div class="path-step"><div class="path-icon">2</div><div class="path-text">Finds omokaamsterdam.com<br>ranked on page one</div></div>
+      <div class="path-arrow">→</div>
+      <div class="path-step"><div class="path-icon">3</div><div class="path-text">Sees menu + this<br>weekend's hours instantly</div></div>
+      <div class="path-arrow">→</div>
+      <div class="path-step"><div class="path-icon">4</div><div class="path-text">Books a table<br>on the spot</div></div>
+      <div class="path-arrow">→</div>
+      <div class="path-step highlight"><div class="path-icon">€</div><div class="path-text">Walks in and<br>spends</div></div>
+    </div>
+
+    <div class="revenue-box reveal">
+      <div class="rev-line"><span class="rev-label">Extra tourist tables per weekend from search alone</span><span class="rev-num">+6–12</span></div>
+      <div class="rev-line"><span class="rev-label">Average spend per table</span><span class="rev-num">~€70</span></div>
+      <div class="rev-line total"><span class="rev-label">Additional monthly revenue, conservatively</span><span class="rev-num">€1,700–€3,400</span></div>
+      <p class="rev-note">Against a one-page site and modest hosting cost — usually under €200 to build and roughly €10–15/month to host — this pays for itself in the first weekend it ranks.</p>
+    </div>
+  </div>
+</section>
+
+<section id="timeline">
+  <div class="wrap">
+    <div class="kicker">08 · Project timeline</div>
+    <h2 class="reveal">Three weeks, start to launch.</h2>
+    <p class="lead reveal">A clear, professional schedule — no open-ended timeline, no guessing when Omoka goes live.</p>
+
+    <div class="timeline-weeks reveal">
+      <div class="week-card">
+        <div class="wk-num">Week 1</div>
+        <h4>Strategy</h4>
+        <ul>
+          <li>Strategy & discovery</li>
+          <li>Content collection (menu, photos, story)</li>
+          <li>Design direction approved with you</li>
+        </ul>
+      </div>
+      <div class="week-card">
+        <div class="wk-num">Week 2</div>
+        <h4>Development</h4>
+        <ul>
+          <li>Full site build</li>
+          <li>Mobile optimization</li>
+          <li>Local SEO setup</li>
+        </ul>
+      </div>
+      <div class="week-card">
+        <div class="wk-num">Week 3</div>
+        <h4>Launch</h4>
+        <ul>
+          <li>Testing across devices</li>
+          <li>Go live on omokaamsterdam.com</li>
+          <li>Training so you can update it yourself</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="roadmap">
+  <div class="wrap">
+    <div class="kicker">09 · Build principles</div>
+    <h2 class="reveal">Small on purpose, not by accident.</h2>
+
+    <div class="roadmap reveal">
+      <div class="road-step">
+        <div class="wk">Step 1</div>
+        <h4>Lock the essentials</h4>
+        <p>Pull the current menu, this month's location, hours, and best reel footage from Instagram into one place. This is content you already have.</p>
+      </div>
+      <div class="road-step">
+        <div class="wk">Step 2</div>
+        <h4>One page, built to answer two questions</h4>
+        <p>"What's on the menu" and "how do I book" above the fold, in that order. Instagram feed embedded lower down for atmosphere, not navigation.</p>
+      </div>
+      <div class="road-step">
+        <div class="wk">Step 3</div>
+        <h4>Own the booking</h4>
+        <p>A simple reservation form that emails you directly — no dependency on a third-party bio-link tool that can vanish or change its pricing.</p>
+      </div>
+      <div class="road-step">
+        <div class="wk">Step 4</div>
+        <h4>Let it show up in search</h4>
+        <p>Basic local SEO — name, cuisine, neighborhood — so "Senegalese food Amsterdam" finds Omoka the same week it's typed in.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="investment">
+  <div class="wrap">
+    <div class="kicker">10 · The investment</div>
+    <h2 class="reveal">Priced like the asset it becomes.</h2>
+    <p class="lead reveal">This isn't a recurring rental on a platform you don't own. It's a one-time build that keeps earning its keep every weekend, for years.</p>
+
+    <div class="invest-wrap reveal">
+      <div class="invest-main">
+        <div class="inv-eyebrow">Website development</div>
+        <div class="inv-price">€1,450<sup>one-time</sup></div>
+        <ul class="inv-includes">
+          <li>Custom design, built around Omoka's identity</li>
+          <li>Full development — hero, story, menu, reservations, maps, Instagram feed</li>
+          <li>Local SEO setup</li>
+          <li>Deployment on your own domain</li>
+          <li>Launch-week support & training</li>
+        </ul>
+      </div>
+      <div class="invest-side">
+        <div class="inv-eyebrow">Optional</div>
+        <div class="inv-price">From €59<sup>/ month</sup></div>
+        <p>Ongoing maintenance: hosting, security updates, menu edits, small content changes, and a direct line to KBO whenever something needs to change.</p>
+      </div>
+    </div>
+    <p style="font-family:'system-sans',sans-serif; font-size:12.5px; color:var(--cream-dim); opacity:0.7; margin-top:20px;">Figures shown as a starting reference — final scope confirmed together in Week 1.</p>
+  </div>
+</section>
+
+<section id="whykbo">
+  <div class="wrap">
+    <div class="kicker">11 · Why KBO</div>
+    <h2 class="reveal">KBO doesn't just build websites.</h2>
+    <p class="lead reveal">KBO builds the digital systems that turn a following into a business — the part that comes after the photos and the reels have already done their job.</p>
+
+    <div class="pillars reveal">
+      <div class="pillar">
+        <div class="p-num">01</div>
+        <h4>Get discovered</h4>
+        <p>Local SEO and a site Google can actually index — so the search that should find Omoka, does.</p>
+      </div>
+      <div class="pillar">
+        <div class="p-num">02</div>
+        <h4>Convert visitors</h4>
+        <p>Every page built around one job: turning a curious visitor into a booked table, not just a scroll.</p>
+      </div>
+      <div class="pillar">
+        <div class="p-num">03</div>
+        <h4>Increase bookings</h4>
+        <p>A reservation flow you own, plus the analytics to see exactly what's working — and do more of it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="closing">
+  <div class="wrap">
+    <div class="kicker">12 · Ready when you are</div>
+    <p class="big-line reveal">Ready to build Omoka's <em>digital home</em>?</p>
+    <p class="lead reveal" style="margin-top:24px;">Instagram got you discovered. A website is what turns that attention into tables — every weekend, on autopilot, whether it's a regular or a tourist typing "African food Amsterdam" for the first time. The build takes three weeks. The cost of waiting is every weekend between now and then.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Prepared by KBO — websites for growing brands. Figures on follower/post counts reflect the public Instagram profile at time of writing; funnel and revenue figures are illustrative, not measured analytics.</p>
+  </div>
+</footer>
+
+<script>
+  // scroll reveal
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, {threshold:0.15});
+  revealEls.forEach(el=>io.observe(el));
+
+  // funnel bars animate to width when visible
+  const bars = document.querySelectorAll('.funnel-bar');
+  const barIo = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        const el = e.target;
+        const w = el.getAttribute('data-w');
+        requestAnimationFrame(()=>{ el.style.width = w + '%'; });
+        barIo.unobserve(el);
+      }
+    });
+  }, {threshold:0.4});
+  bars.forEach(b=>barIo.observe(b));
+</script>
+</body>
+</html>
