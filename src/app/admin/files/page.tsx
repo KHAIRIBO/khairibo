@@ -70,7 +70,7 @@ export default function FilesPage() {
       const results: {file: File; path: string}[] = [];
       
       if (entry.isFile) {
-        entry.file((file) => {
+        entry.file((file: File) => {
           (file as any).relativePath = path + file.name;
           results.push({ file, path: path + file.name });
           resolve(results);
