@@ -14,7 +14,10 @@ import {
   MoreVertical,
   Cloud,
   FileCode,
-  Download
+  Download,
+  FolderArchive,
+  Globe,
+  Lock
 } from "lucide-react";
 
 import { supabase } from "@/lib/supabase";
@@ -26,6 +29,7 @@ interface UploadedFile {
   type: string;
   url: string;
   created_at: string;
+  public: boolean;
 }
 
 export default function FilesPage() {
@@ -33,6 +37,7 @@ export default function FilesPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [uploadMode, setUploadMode] = useState<"files" | "folder" | "zip">("files");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch files from Supabase
@@ -49,32 +54,80 @@ export default function FilesPage() {
     if (data) setFiles(data);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
+  const togglePublic = async (id: string, currentPublic: boolean) => {
+    const { error } = await supabase
+      .from('files')
+      .update({ public: !currentPublic })
+      .eq('id', id);
+
+    if (!error) {
+      setFiles(files.map(f => f.id === id ? { ...f, public: !currentPublic } : f));
+    }
   };
 
-  const handleDragLeave = () => {
-    setIsDragging(false);
+  const readDirectoryEntry = async (entry: any, path: string = ""): Promise<{file: File; path: string}[]> => {
+    return new Promise((resolve, reject) => {
+      const results: {file: File; path: string}[] = [];
+      
+      if (entry.isFile) {
+        entry.file((file) => {
+          (file as any).relativePath = path + file.name;
+          results.push({ file, path: path + file.name });
+          resolve(results);
+        }, reject);
+      } else if (entry.isDirectory) {
+        const reader = entry.createReader();
+        const readAll = async () => {
+          const entries = await new Promise<any[]>((res) => reader.readEntries(res));
+          for (const childEntry of entries) {
+            const childResults = await readDirectoryEntry(childEntry, path + entry.name + "/");
+            results.push(...childResults);
+          }
+          resolve(results);
+        };
+        readAll().catch(reject);
+      } else {
+        resolve(results);
+      }
+    });
   };
 
-  const handleUpload = async (newFiles: FileList | File[]) => {
+  const handleUpload = async (newFiles: FileList | File[], mode: "files" | "folder" | "zip" = "files") => {
     setUploading(true);
     setProgress(0);
     
-    const filesToUpload = Array.from(newFiles);
+    let filesToUpload: {file: File; path: string}[] = [];
+
+    if (mode === "folder") {
+      // Handle folder upload - preserve folder structure
+      const entries = Array.from(newFiles as FileList).map(f => f as any);
+      // If coming from webkitdirectory input, files already have webkitRelativePath
+      if (entries.length > 0 && (entries[0] as any).webkitRelativePath) {
+        filesToUpload = Array.from(newFiles as FileList).map((file: any) => ({
+          file,
+          path: file.webkitRelativePath
+        }));
+      }
+    } else if (mode === "zip") {
+      // Handle zip files - upload as-is
+      filesToUpload = Array.from(newFiles as FileList).map(file => ({ file, path: file.name }));
+    } else {
+      // Regular files
+      filesToUpload = Array.from(newFiles as FileList).map(file => ({ file, path: file.name }));
+    }
+
     const totalFiles = filesToUpload.length;
 
     for (let i = 0; i < totalFiles; i++) {
-      const file = filesToUpload[i];
+      const { file, path: filePath } = filesToUpload[i];
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const uniqueFileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const storagePath = `${filePath.replace(/\\/g, '/').split('/').slice(0, -1).join('/')}/${uniqueFileName}`.replace(/^\/+/, '');
 
       // 1. Upload to Supabase Storage
       const { data: storageData, error: storageError } = await supabase.storage
         .from('assets')
-        .upload(filePath, file);
+        .upload(storagePath || uniqueFileName, file);
 
       if (storageError) {
         console.error('Storage error:', storageError);
@@ -85,7 +138,7 @@ export default function FilesPage() {
       // 2. Get Public URL
       const { data: { publicUrl } } = supabase.storage
         .from('assets')
-        .getPublicUrl(filePath);
+        .getPublicUrl(storagePath || uniqueFileName);
 
       // 3. Save Metadata to Database
       const { data: dbData, error: dbError } = await supabase
@@ -95,6 +148,7 @@ export default function FilesPage() {
           size: (file.size / (1024 * 1024)).toFixed(2) + " MB",
           type: file.type,
           url: publicUrl,
+          public: true,
         }])
         .select()
         .single();
@@ -110,17 +164,99 @@ export default function FilesPage() {
     setUploading(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    if (e.dataTransfer.files.length > 0) {
-      handleUpload(e.dataTransfer.files);
+    
+    if (e.dataTransfer.items.length === 0) {
+      if (e.dataTransfer.files.length > 0) {
+        await handleUpload(e.dataTransfer.files, uploadMode);
+      }
+      return;
+    }
+
+    // Check if any item is a directory
+    const hasDirectory = Array.from(e.dataTransfer.items).some(item => 
+      item.webkitGetAsEntry && item.webkitGetAsEntry()?.isDirectory
+    );
+
+    if (hasDirectory || uploadMode === "folder") {
+      setUploading(true);
+      setProgress(0);
+      
+      const dtItems = Array.from(e.dataTransfer.items);
+      const dtEntries = dtItems.map(item => item.webkitGetAsEntry()).filter(Boolean);
+      
+      let filesToUpload: {file: File; path: string}[] = [];
+      
+      for (const entry of dtEntries) {
+        if (entry) {
+          const entryFiles = await readDirectoryEntry(entry);
+          filesToUpload.push(...entryFiles);
+        }
+      }
+
+      const totalFiles = filesToUpload.length;
+
+      for (let i = 0; i < totalFiles; i++) {
+        const { file, path: filePath } = filesToUpload[i];
+        const fileExt = file.name.split('.').pop();
+        const uniqueFileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const storagePath = `${filePath.replace(/\\/g, '/').split('/').slice(0, -1).join('/')}/${uniqueFileName}`.replace(/^\/+/, '');
+
+        const { data: storageData, error: storageError } = await supabase.storage
+          .from('assets')
+          .upload(storagePath || uniqueFileName, file);
+
+        if (storageError) {
+          console.error('Storage error:', storageError);
+          alert(`Upload failed: ${storageError.message}. Make sure you created the "assets" bucket in Supabase.`);
+          continue;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('assets')
+          .getPublicUrl(storagePath || uniqueFileName);
+
+        const { data: dbData, error: dbError } = await supabase
+          .from('files')
+          .insert([{
+            name: file.name,
+            size: (file.size / (1024 * 1024)).toFixed(2) + " MB",
+            type: file.type,
+            url: publicUrl,
+          }])
+          .select()
+          .single();
+
+        if (dbData) {
+          setFiles((prev) => [dbData, ...prev]);
+        }
+
+        setProgress(Math.round(((i + 1) / totalFiles) * 100));
+      }
+
+      setUploading(false);
+    } else if (uploadMode === "zip") {
+      await handleUpload(e.dataTransfer.files, "zip");
+    } else {
+      await handleUpload(e.dataTransfer.files, "files");
     }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      handleUpload(e.target.files);
+      handleUpload(e.target.files, uploadMode);
+      e.target.value = "";
     }
   };
 
@@ -139,6 +275,7 @@ export default function FilesPage() {
     if (type.startsWith("image/")) return <ImageIcon size={24} className="text-blue-500" />;
     if (type.includes("pdf")) return <FileText size={24} className="text-red-500" />;
     if (type.includes("json") || type.includes("javascript")) return <FileCode size={24} className="text-amber-500" />;
+    if (type.includes("video")) return <File size={24} className="text-purple-500" />;
     return <File size={24} className="text-slate-500" />;
   };
 
@@ -150,18 +287,31 @@ export default function FilesPage() {
           <h1 className="text-4xl font-black text-slate-900 tracking-tight">Cloud Storage</h1>
           <p className="text-slate-500 font-medium">Manage your assets and documents securely.</p>
         </div>
-        <button 
-          onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-2 px-6 py-3.5 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10 hover:-translate-y-0.5"
-        >
-          <Upload size={20} />
-          Upload New File
-        </button>
+        <div className="flex gap-3">
+          <select
+            value={uploadMode}
+            onChange={(e) => setUploadMode(e.target.value as any)}
+            className="px-4 py-3.5 bg-white border border-slate-200 rounded-2xl font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/5"
+          >
+            <option value="files">Files</option>
+            <option value="folder">Folder</option>
+            <option value="zip">ZIP Archive</option>
+          </select>
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 px-6 py-3.5 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10 hover:-translate-y-0.5"
+          >
+            <Upload size={20} />
+            Upload {uploadMode === "folder" ? "Folder" : uploadMode === "zip" ? "ZIP" : "Files"}
+          </button>
+        </div>
         <input 
           type="file" 
           ref={fileInputRef} 
           onChange={handleFileSelect} 
-          multiple 
+          multiple={uploadMode !== "folder"}
+          {...(uploadMode === "folder" ? { webkitdirectory: "", directory: "" } : {})}
+          {...(uploadMode === "zip" ? { accept: ".zip,application/zip,application/x-zip-compressed" } : {})}
           className="hidden" 
         />
       </div>
@@ -181,14 +331,22 @@ export default function FilesPage() {
           <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center mb-6 transition-all ${
             isDragging ? "bg-blue-500 text-white scale-110 shadow-xl shadow-blue-500/20" : "bg-slate-50 text-slate-400 group-hover:bg-slate-900 group-hover:text-white"
           }`}>
-            <Cloud size={40} />
+            {uploadMode === "folder" ? <FolderArchive size={40} /> : uploadMode === "zip" ? <FileCode size={40} /> : <Cloud size={40} />}
           </div>
-          <h3 className="text-2xl font-black text-slate-900 mb-2">Drag & Drop Files</h3>
+          <h3 className="text-2xl font-black text-slate-900 mb-2">
+            {uploadMode === "folder" ? "Drag & Drop Folder" : uploadMode === "zip" ? "Drag & Drop ZIP Archive" : "Drag & Drop Files"}
+          </h3>
           <p className="text-slate-500 font-medium max-w-xs mx-auto mb-8">
-            Upload your images, PDFs, or documents directly to your secure storage.
+            {uploadMode === "folder" 
+              ? "Upload entire folders preserving directory structure." 
+              : uploadMode === "zip" 
+              ? "Upload ZIP archives for bulk file management." 
+              : "Upload your images, PDFs, or documents directly to your secure storage."}
           </p>
           <div className="flex gap-4 justify-center">
-            <span className="px-4 py-2 bg-slate-50 rounded-xl text-xs font-black text-slate-400 uppercase tracking-widest border border-slate-100">Max 50MB</span>
+            <span className="px-4 py-2 bg-slate-50 rounded-xl text-xs font-black text-slate-400 uppercase tracking-widest border border-slate-100">
+              {uploadMode === "folder" ? "Preserves structure" : uploadMode === "zip" ? "ZIP only" : "Max 50MB"}
+            </span>
             <span className="px-4 py-2 bg-slate-50 rounded-xl text-xs font-black text-slate-400 uppercase tracking-widest border border-slate-100">All formats</span>
           </div>
         </div>
@@ -238,12 +396,25 @@ export default function FilesPage() {
                 <div className="p-4 bg-slate-50 rounded-[1.5rem] group-hover:bg-slate-900 group-hover:text-white transition-all">
                   {getFileIcon(file.type)}
                 </div>
-                <button 
-                  onClick={() => handleDelete(file.id)}
-                  className="p-2 text-slate-400 hover:text-red-500 transition-colors"
-                >
-                  <Trash2 size={18} />
-                </button>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => togglePublic(file.id, file.public)}
+                    className={`p-2 rounded-xl transition-colors ${
+                      file.public 
+                        ? "text-emerald-500 bg-emerald-50 hover:bg-emerald-100" 
+                        : "text-slate-400 bg-slate-50 hover:bg-slate-100"
+                    }`}
+                    title={file.public ? "Public - click to hide" : "Private - click to make public"}
+                  >
+                    {file.public ? <Globe size={18} /> : <Lock size={18} />}
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(file.id)}
+                    className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               </div>
               
               <h4 className="font-bold text-slate-900 truncate mb-1" title={file.name}>{file.name}</h4>

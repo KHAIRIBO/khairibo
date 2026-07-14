@@ -1,0 +1,21 @@
+{
+  "name": "KBO Portfolio",
+  "short_name": "KBO",
+  "description": "Portfolio of Khairi Bouzakher - Full Stack Developer",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/photo/khairibo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/photo/khairibo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
