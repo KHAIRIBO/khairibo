@@ -6,30 +6,8 @@ const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY 
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 // Fallback in-memory list if Supabase is not configured
-let localFiles: any[] = [
-  {
-    id: "sample-1",
-    name: "Project Documentation & Guidelines.txt",
-    size: "0.15 MB",
-    type: "text/plain",
-    url: "",
-    content: "Welcome to the developer portal!\n\nHere are the core rules:\n1. Keep design modern & glassmorphic.\n2. Ensure fast loading & high performance.\n3. Test mobile responsiveness.",
-    public: true,
-    allow_download: false,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "sample-2",
-    name: "KBO Portfolio Assets Bundle.zip",
-    size: "4.20 MB",
-    type: "application/zip",
-    url: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80",
-    content: "",
-    public: true,
-    allow_download: true,
-    created_at: new Date().toISOString(),
-  }
-];
+let localFiles: any[] = [];
+
 
 function getSupabase() {
   if (!supabaseUrl) return null;
