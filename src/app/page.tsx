@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import WeatherWidget from "@/components/WeatherWidget";
 import Hero from "@/components/Hero";
 import About from "@/components/About";
 import Skills from "@/components/Skills";
@@ -10,12 +11,15 @@ import ScrollProgress from "@/components/ScrollProgress";
 import LoadingScreen from "@/components/LoadingScreen";
 import TechNews from "@/components/TechNews";
 import KBOAI from "@/components/KBOAI";
+import AdminSharePopup from "@/components/AdminSharePopup";
 
 export default function Home() {
   return (
     <>
       <LoadingScreen />
+      <AdminSharePopup />
       <ScrollProgress />
+      <WeatherWidget />
       <Navbar />
       <main>
         <Hero />
@@ -31,3 +35,6 @@ export default function Home() {
     </>
   );
 }
+
+
+

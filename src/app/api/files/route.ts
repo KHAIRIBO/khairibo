@@ -5,49 +5,135 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
+// Fallback in-memory list if Supabase is not configured
+let localFiles: any[] = [
+  {
+    id: "sample-1",
+    name: "Project Documentation & Guidelines.txt",
+    size: "0.15 MB",
+    type: "text/plain",
+    url: "",
+    content: "Welcome to the developer portal!\n\nHere are the core rules:\n1. Keep design modern & glassmorphic.\n2. Ensure fast loading & high performance.\n3. Test mobile responsiveness.",
+    public: true,
+    allow_download: false,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "sample-2",
+    name: "KBO Portfolio Assets Bundle.zip",
+    size: "4.20 MB",
+    type: "application/zip",
+    url: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80",
+    content: "",
+    public: true,
+    allow_download: true,
+    created_at: new Date().toISOString(),
+  }
+];
+
+function getSupabase() {
+  if (!supabaseUrl) return null;
+  const key = supabaseServiceKey || supabasePublishableKey;
+  if (!key) return null;
+  return createClient(supabaseUrl, key);
+}
+
+// ── GET: list all public files ──────────────────────────────────────────────
 export async function GET() {
   try {
-    const supabase = supabaseServiceKey
-      ? createClient(supabaseUrl, supabaseServiceKey)
-      : createClient(supabaseUrl, supabasePublishableKey);
+    const supabase = getSupabase();
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('files')
+        .select('*')
+        .eq('public', true)
+        .order('created_at', { ascending: false });
 
-    const { data, error } = await supabase
-      .from('files')
-      .select('*')
-      .eq('public', true)
-      .order('created_at', { ascending: false });
+      if (!error && data && data.length > 0) {
+        return NextResponse.json(data);
+      }
+    }
+    return NextResponse.json(localFiles);
+  } catch {
+    return NextResponse.json(localFiles);
+  }
+}
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+// ── POST: create a new file / text snippet ──────────────────────────────────
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { name, size, type, url, content, allow_download = true, is_text = false } = body;
+
+    const newFile = {
+      id: "file-" + Date.now(),
+      name: name || "Shared Snippet.txt",
+      size: size || "0.05 MB",
+      type: type || (is_text ? "text/plain" : "file"),
+      url: url || "",
+      content: content || "",
+      public: true,
+      allow_download: allow_download ?? true,
+      created_at: new Date().toISOString(),
+    };
+
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('files')
+          .insert([{
+            name: newFile.name,
+            size: newFile.size,
+            type: newFile.type,
+            url: newFile.url,
+            content: newFile.content,
+            public: true,
+            allow_download: newFile.allow_download,
+          }])
+          .select()
+          .single();
+
+        if (!error && data) {
+          return NextResponse.json(data, { status: 201 });
+        }
+      } catch {
+        // fall through to local
+      }
     }
 
-    return NextResponse.json(data || []);
-  } catch (error) {
+    localFiles.unshift(newFile);
+    return NextResponse.json(newFile, { status: 201 });
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function POST(request: Request) {
+// ── DELETE: remove a file by id ─────────────────────────────────────────────
+export async function DELETE(request: Request) {
   try {
-    const body = await request.json();
-    const { name, size, type, url } = body;
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
 
-    const supabase = supabaseServiceKey
-      ? createClient(supabaseUrl, supabaseServiceKey)
-      : createClient(supabaseUrl, supabasePublishableKey);
-
-    const { data, error } = await supabase
-      .from('files')
-      .insert([{ name, size, type, url }])
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!id) {
+      return NextResponse.json({ error: 'Missing id parameter' }, { status: 400 });
     }
 
-    return NextResponse.json(data, { status: 201 });
-  } catch (error) {
+    // Always remove from in-memory fallback
+    localFiles = localFiles.filter(f => f.id !== id);
+
+    // Remove from Supabase if configured
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        await supabase.from('files').delete().eq('id', id);
+      } catch {
+        // Supabase not reachable, local deletion was enough
+      }
+    }
+
+    return NextResponse.json({ success: true });
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

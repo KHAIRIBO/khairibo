@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Upload, 
@@ -8,463 +8,586 @@ import {
   Image as ImageIcon, 
   FileText, 
   X, 
-  CheckCircle2, 
   Trash2, 
   Eye, 
-  MoreVertical,
   Cloud,
   FileCode,
   Download,
-  FolderArchive,
   Globe,
-  Lock
+  Lock,
+  Share2,
+  Check,
+  Ban,
+  Copy,
+  Type,
+  Paperclip
 } from "lucide-react";
 
 import { supabase } from "@/lib/supabase";
 
-interface UploadedFile {
+interface SharedFile {
   id: string;
   name: string;
   size: string;
   type: string;
   url: string;
+  content?: string;
   created_at: string;
   public: boolean;
+  allow_download: boolean;
 }
 
 export default function FilesPage() {
-  const [files, setFiles] = useState<UploadedFile[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
+  const [files, setFiles] = useState<SharedFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [uploadMode, setUploadMode] = useState<"files" | "folder" | "zip">("files");
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch files from Supabase
-  useEffect(() => {
-    fetchFiles();
-  }, []);
+  // Unified share modal
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [shareTab, setShareTab] = useState<"text" | "file">("text");
+  const [allowDownload, setAllowDownload] = useState(true);
+
+  // Text snippet fields
+  const [snippetTitle, setSnippetTitle] = useState("");
+  const [snippetText, setSnippetText] = useState("");
+
+  // File upload fields
+  const [pickedFile, setPickedFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Preview Popup Modal
+  const [previewFile, setPreviewFile] = useState<SharedFile | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { fetchFiles(); }, []);
 
   const fetchFiles = async () => {
-    const { data, error } = await supabase
-      .from('files')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
+    try {
+      const res = await fetch('/api/files');
+      const data = await res.json();
+      if (Array.isArray(data)) { setFiles(data); return; }
+    } catch { /* fallback */ }
+    const { data } = await supabase.from('files').select('*').order('created_at', { ascending: false });
     if (data) setFiles(data);
   };
 
+  const openShareModal = () => {
+    setShareTab("text");
+    setSnippetTitle("");
+    setSnippetText("");
+    setPickedFile(null);
+    setAllowDownload(true);
+    setIsShareModalOpen(true);
+  };
+
   const togglePublic = async (id: string, currentPublic: boolean) => {
-    const { error } = await supabase
-      .from('files')
-      .update({ public: !currentPublic })
-      .eq('id', id);
-
-    if (!error) {
-      setFiles(files.map(f => f.id === id ? { ...f, public: !currentPublic } : f));
-    }
+    setFiles(files.map(f => f.id === id ? { ...f, public: !currentPublic } : f));
+    await supabase.from('files').update({ public: !currentPublic }).eq('id', id);
   };
 
-  const readDirectoryEntry = async (entry: any, path: string = ""): Promise<{file: File; path: string}[]> => {
-    return new Promise((resolve, reject) => {
-      const results: {file: File; path: string}[] = [];
-      
-      if (entry.isFile) {
-        entry.file((file: File) => {
-          (file as any).relativePath = path + file.name;
-          results.push({ file, path: path + file.name });
-          resolve(results);
-        }, reject);
-      } else if (entry.isDirectory) {
-        const reader = entry.createReader();
-        const readAll = async () => {
-          const entries = await new Promise<any[]>((res) => reader.readEntries(res));
-          for (const childEntry of entries) {
-            const childResults = await readDirectoryEntry(childEntry, path + entry.name + "/");
-            results.push(...childResults);
-          }
-          resolve(results);
-        };
-        readAll().catch(reject);
-      } else {
-        resolve(results);
-      }
-    });
+  const toggleAllowDownload = async (id: string, current: boolean) => {
+    setFiles(files.map(f => f.id === id ? { ...f, allow_download: !current } : f));
+    await supabase.from('files').update({ allow_download: !current }).eq('id', id);
   };
 
-  const handleUpload = async (newFiles: FileList | File[], mode: "files" | "folder" | "zip" = "files") => {
+  /* ── Text snippet submit ── */
+  const handleSubmitText = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!snippetTitle.trim() || !snippetText.trim()) return;
+
+    const payload = {
+      name: snippetTitle.endsWith('.txt') ? snippetTitle : `${snippetTitle}.txt`,
+      size: `${(snippetText.length / 1024).toFixed(2)} KB`,
+      type: "text/plain",
+      url: "",
+      content: snippetText,
+      public: true,
+      allow_download: allowDownload,
+      is_text: true,
+    };
+
+    try {
+      const res = await fetch('/api/files', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data?.id) setFiles(prev => [data, ...prev]);
+    } catch (err) { console.error(err); }
+
+    setIsShareModalOpen(false);
+  };
+
+  /* ── File upload submit ── */
+  const handleSubmitFile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pickedFile) return;
     setUploading(true);
     setProgress(0);
-    
-    let filesToUpload: {file: File; path: string}[] = [];
 
-    if (mode === "folder") {
-      // Handle folder upload - preserve folder structure
-      const entries = Array.from(newFiles as FileList).map(f => f as any);
-      // If coming from webkitdirectory input, files already have webkitRelativePath
-      if (entries.length > 0 && (entries[0] as any).webkitRelativePath) {
-        filesToUpload = Array.from(newFiles as FileList).map((file: any) => ({
-          file,
-          path: file.webkitRelativePath
-        }));
+    const fileExt = pickedFile.name.split('.').pop();
+    const uniqueFileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+    let publicUrl = "";
+
+    try {
+      const { data: storageData } = await supabase.storage.from('assets').upload(uniqueFileName, pickedFile);
+      if (storageData) {
+        const { data: urlData } = supabase.storage.from('assets').getPublicUrl(uniqueFileName);
+        publicUrl = urlData.publicUrl;
       }
-    } else if (mode === "zip") {
-      // Handle zip files - upload as-is
-      filesToUpload = Array.from(newFiles as FileList).map(file => ({ file, path: file.name }));
-    } else {
-      // Regular files
-      filesToUpload = Array.from(newFiles as FileList).map(file => ({ file, path: file.name }));
+    } catch {
+      publicUrl = URL.createObjectURL(pickedFile);
     }
 
-    const totalFiles = filesToUpload.length;
+    setProgress(60);
 
-    for (let i = 0; i < totalFiles; i++) {
-      const { file, path: filePath } = filesToUpload[i];
-      const fileExt = file.name.split('.').pop();
-      const uniqueFileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const storagePath = `${filePath.replace(/\\/g, '/').split('/').slice(0, -1).join('/')}/${uniqueFileName}`.replace(/^\/+/, '');
+    const fileItem = {
+      id: "file-" + Date.now(),
+      name: pickedFile.name,
+      size: (pickedFile.size / (1024 * 1024)).toFixed(2) + " MB",
+      type: pickedFile.type || "file",
+      url: publicUrl || URL.createObjectURL(pickedFile),
+      content: "",
+      public: true,
+      allow_download: allowDownload,
+      created_at: new Date().toISOString(),
+    };
 
-      // 1. Upload to Supabase Storage
-      const { data: storageData, error: storageError } = await supabase.storage
-        .from('assets')
-        .upload(storagePath || uniqueFileName, file);
+    try {
+      await fetch('/api/files', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fileItem),
+      });
+    } catch {}
 
-      if (storageError) {
-        console.error('Storage error:', storageError);
-        alert(`Upload failed: ${storageError.message}. Make sure you created the "assets" bucket in Supabase.`);
-        continue;
-      }
-
-      // 2. Get Public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('assets')
-        .getPublicUrl(storagePath || uniqueFileName);
-
-      // 3. Save Metadata to Database
-      const { data: dbData, error: dbError } = await supabase
-        .from('files')
-        .insert([{
-          name: file.name,
-          size: (file.size / (1024 * 1024)).toFixed(2) + " MB",
-          type: file.type,
-          url: publicUrl,
-          public: true,
-        }])
-        .select()
-        .single();
-
-      if (dbData) {
-        setFiles((prev) => [dbData, ...prev]);
-      }
-
-      // Update progress
-      setProgress(Math.round(((i + 1) / totalFiles) * 100));
-    }
-
+    setFiles(prev => [fileItem, ...prev]);
+    setProgress(100);
     setUploading(false);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    if (e.dataTransfer.items.length === 0) {
-      if (e.dataTransfer.files.length > 0) {
-        await handleUpload(e.dataTransfer.files, uploadMode);
-      }
-      return;
-    }
-
-    // Check if any item is a directory
-    const hasDirectory = Array.from(e.dataTransfer.items).some(item => 
-      item.webkitGetAsEntry && item.webkitGetAsEntry()?.isDirectory
-    );
-
-    if (hasDirectory || uploadMode === "folder") {
-      setUploading(true);
-      setProgress(0);
-      
-      const dtItems = Array.from(e.dataTransfer.items);
-      const dtEntries = dtItems.map(item => item.webkitGetAsEntry()).filter(Boolean);
-      
-      let filesToUpload: {file: File; path: string}[] = [];
-      
-      for (const entry of dtEntries) {
-        if (entry) {
-          const entryFiles = await readDirectoryEntry(entry);
-          filesToUpload.push(...entryFiles);
-        }
-      }
-
-      const totalFiles = filesToUpload.length;
-
-      for (let i = 0; i < totalFiles; i++) {
-        const { file, path: filePath } = filesToUpload[i];
-        const fileExt = file.name.split('.').pop();
-        const uniqueFileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const storagePath = `${filePath.replace(/\\/g, '/').split('/').slice(0, -1).join('/')}/${uniqueFileName}`.replace(/^\/+/, '');
-
-        const { data: storageData, error: storageError } = await supabase.storage
-          .from('assets')
-          .upload(storagePath || uniqueFileName, file);
-
-        if (storageError) {
-          console.error('Storage error:', storageError);
-          alert(`Upload failed: ${storageError.message}. Make sure you created the "assets" bucket in Supabase.`);
-          continue;
-        }
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('assets')
-          .getPublicUrl(storagePath || uniqueFileName);
-
-        const { data: dbData, error: dbError } = await supabase
-          .from('files')
-          .insert([{
-            name: file.name,
-            size: (file.size / (1024 * 1024)).toFixed(2) + " MB",
-            type: file.type,
-            url: publicUrl,
-          }])
-          .select()
-          .single();
-
-        if (dbData) {
-          setFiles((prev) => [dbData, ...prev]);
-        }
-
-        setProgress(Math.round(((i + 1) / totalFiles) * 100));
-      }
-
-      setUploading(false);
-    } else if (uploadMode === "zip") {
-      await handleUpload(e.dataTransfer.files, "zip");
-    } else {
-      await handleUpload(e.dataTransfer.files, "files");
-    }
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      handleUpload(e.target.files, uploadMode);
-      e.target.value = "";
-    }
+    setPickedFile(null);
+    setIsShareModalOpen(false);
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase
-      .from('files')
-      .delete()
-      .eq('id', id);
+    // Optimistically remove from UI
+    setFiles(prev => prev.filter(f => f.id !== id));
 
-    if (!error) {
-      setFiles(files.filter(f => f.id !== id));
+    try {
+      await fetch(`/api/files?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    } catch (err) {
+      console.error("Failed to delete file", err);
     }
   };
 
-  const getFileIcon = (type: string) => {
-    if (type.startsWith("image/")) return <ImageIcon size={24} className="text-blue-500" />;
-    if (type.includes("pdf")) return <FileText size={24} className="text-red-500" />;
-    if (type.includes("json") || type.includes("javascript")) return <FileCode size={24} className="text-amber-500" />;
-    if (type.includes("video")) return <File size={24} className="text-purple-500" />;
-    return <File size={24} className="text-slate-500" />;
+
+  const getFileIcon = (type: string, size = 22) => {
+    if (type.startsWith("image/")) return <ImageIcon size={size} className="text-blue-500" />;
+    if (type.includes("pdf") || type.includes("text")) return <FileText size={size} className="text-emerald-500" />;
+    if (type.includes("json") || type.includes("javascript")) return <FileCode size={size} className="text-amber-500" />;
+    return <File size={size} className="text-slate-500" />;
   };
 
+  const copyShareLink = (file: SharedFile) => {
+    navigator.clipboard.writeText(`${window.location.origin}/downloads`);
+    setCopiedId(file.id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  /* ── Drop zone handlers inside modal ── */
+  const onDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const f = e.dataTransfer.files?.[0];
+    if (f) setPickedFile(f);
+  }, []);
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 py-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Cloud Storage</h1>
-          <p className="text-slate-500 font-medium">Manage your assets and documents securely.</p>
+          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">File &amp; Text Sharing Center</h1>
+          <p className="text-slate-500 font-medium text-sm mt-1">Share files or text snippets — control download permissions per item.</p>
         </div>
-        <div className="flex gap-3">
-          <select
-            value={uploadMode}
-            onChange={(e) => setUploadMode(e.target.value as any)}
-            className="px-4 py-3.5 bg-white border border-slate-200 rounded-2xl font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/5"
-          >
-            <option value="files">Files</option>
-            <option value="folder">Folder</option>
-            <option value="zip">ZIP Archive</option>
-          </select>
-          <button 
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-6 py-3.5 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10 hover:-translate-y-0.5"
-          >
-            <Upload size={20} />
-            Upload {uploadMode === "folder" ? "Folder" : uploadMode === "zip" ? "ZIP" : "Files"}
-          </button>
-        </div>
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          onChange={handleFileSelect} 
-          multiple={uploadMode !== "folder"}
-          {...(uploadMode === "folder" ? { webkitdirectory: "", directory: "" } : {})}
-          {...(uploadMode === "zip" ? { accept: ".zip,application/zip,application/x-zip-compressed" } : {})}
-          className="hidden" 
-        />
+
+        <button
+          onClick={openShareModal}
+          className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-sm transition-all shadow-md"
+        >
+          <Share2 size={18} />
+          Share Resource
+        </button>
       </div>
 
-      {/* Upload Area */}
-      <motion.div
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className={`relative p-12 border-2 border-dashed rounded-[3rem] transition-all flex flex-col items-center justify-center text-center group overflow-hidden ${
-          isDragging 
-            ? "border-blue-500 bg-blue-50/50" 
-            : "border-slate-200 bg-white hover:border-slate-300"
-        }`}
-      >
-        <div className="relative z-10">
-          <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center mb-6 transition-all ${
-            isDragging ? "bg-blue-500 text-white scale-110 shadow-xl shadow-blue-500/20" : "bg-slate-50 text-slate-400 group-hover:bg-slate-900 group-hover:text-white"
-          }`}>
-            {uploadMode === "folder" ? <FolderArchive size={40} /> : uploadMode === "zip" ? <FileCode size={40} /> : <Cloud size={40} />}
+      {/* Shared Items Grid */}
+      {files.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
+            <Cloud size={32} />
           </div>
-          <h3 className="text-2xl font-black text-slate-900 mb-2">
-            {uploadMode === "folder" ? "Drag & Drop Folder" : uploadMode === "zip" ? "Drag & Drop ZIP Archive" : "Drag & Drop Files"}
-          </h3>
-          <p className="text-slate-500 font-medium max-w-xs mx-auto mb-8">
-            {uploadMode === "folder" 
-              ? "Upload entire folders preserving directory structure." 
-              : uploadMode === "zip" 
-              ? "Upload ZIP archives for bulk file management." 
-              : "Upload your images, PDFs, or documents directly to your secure storage."}
-          </p>
-          <div className="flex gap-4 justify-center">
-            <span className="px-4 py-2 bg-slate-50 rounded-xl text-xs font-black text-slate-400 uppercase tracking-widest border border-slate-100">
-              {uploadMode === "folder" ? "Preserves structure" : uploadMode === "zip" ? "ZIP only" : "Max 50MB"}
-            </span>
-            <span className="px-4 py-2 bg-slate-50 rounded-xl text-xs font-black text-slate-400 uppercase tracking-widest border border-slate-100">All formats</span>
-          </div>
+          <h3 className="text-lg font-bold text-slate-700 mb-1">Nothing shared yet</h3>
+          <p className="text-slate-400 text-sm">Click &quot;Share Resource&quot; to add your first file or text note.</p>
         </div>
-
-        {/* Upload Progress Overlay */}
-        <AnimatePresence>
-          {uploading && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-white/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-12"
-            >
-              <div className="w-full max-w-sm">
-                <div className="flex justify-between items-end mb-4">
-                  <div>
-                    <h4 className="text-xl font-black text-slate-900">Uploading Assets</h4>
-                    <p className="text-sm font-bold text-slate-500">Syncing to secure server...</p>
-                  </div>
-                  <span className="text-3xl font-black text-blue-600">{progress}%</span>
-                </div>
-                <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    className="h-full bg-gradient-to-r from-blue-500 to-purple-600"
-                  />
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      {/* Files Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20">
-        <AnimatePresence>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-16">
           {files.map((file) => (
             <motion.div
               key={file.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="p-6 bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 hover-lift group"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between"
             >
-              <div className="flex justify-between items-start mb-6">
-                <div className="p-4 bg-slate-50 rounded-[1.5rem] group-hover:bg-slate-900 group-hover:text-white transition-all">
-                  {getFileIcon(file.type)}
+              <div>
+                <div className="flex items-start justify-between mb-4">
+                  <div className="p-3 bg-slate-100 rounded-xl text-slate-700">
+                    {getFileIcon(file.type)}
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    {/* Public toggle */}
+                    <button
+                      onClick={() => togglePublic(file.id, file.public)}
+                      className={`p-2 rounded-lg text-xs font-bold transition-colors ${
+                        file.public ? "text-emerald-600 bg-emerald-50" : "text-slate-400 bg-slate-100"
+                      }`}
+                      title={file.public ? "Visible on Downloads Page" : "Private"}
+                    >
+                      {file.public ? <Globe size={16} /> : <Lock size={16} />}
+                    </button>
+
+                    {/* Download toggle */}
+                    <button
+                      onClick={() => toggleAllowDownload(file.id, file.allow_download !== false)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
+                        file.allow_download !== false
+                          ? "bg-blue-50 text-blue-700 border border-blue-200"
+                          : "bg-amber-50 text-amber-700 border border-amber-200"
+                      }`}
+                      title="Toggle Download vs View Only"
+                    >
+                      {file.allow_download !== false ? (
+                        <><Download size={12} />Downloadable</>
+                      ) : (
+                        <><Ban size={12} />View Only</>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(file.id)}
+                      className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => togglePublic(file.id, file.public)}
-                    className={`p-2 rounded-xl transition-colors ${
-                      file.public 
-                        ? "text-emerald-500 bg-emerald-50 hover:bg-emerald-100" 
-                        : "text-slate-400 bg-slate-50 hover:bg-slate-100"
-                    }`}
-                    title={file.public ? "Public - click to hide" : "Private - click to make public"}
-                  >
-                    {file.public ? <Globe size={18} /> : <Lock size={18} />}
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(file.id)}
-                    className="p-2 text-slate-400 hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </div>
-              
-              <h4 className="font-bold text-slate-900 truncate mb-1" title={file.name}>{file.name}</h4>
-              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
-                <span>{file.size}</span>
-                <span>{new Date(file.created_at).toLocaleDateString()}</span>
+
+                <h4 className="font-bold text-slate-900 truncate mb-1 text-sm" title={file.name}>{file.name}</h4>
+                <p className="text-slate-400 text-xs font-medium mb-3">
+                  {file.size} • {new Date(file.created_at).toLocaleDateString()}
+                </p>
+
+                {file.content && (
+                  <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-700 font-mono line-clamp-3 mb-4 border border-slate-100">
+                    {file.content}
+                  </div>
+                )}
               </div>
 
-              <div className="mt-8 grid grid-cols-2 gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                <a 
-                  href={file.url === "https://placeholder.com" ? "#" : file.url} 
-                  target={file.url === "https://placeholder.com" ? "_self" : "_blank"}
-                  rel="noreferrer"
-                  onClick={(e) => file.url === "https://placeholder.com" && e.preventDefault()}
-                  className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                    file.url === "https://placeholder.com" 
-                      ? "bg-slate-50 text-slate-300 cursor-not-allowed" 
-                      : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-                  }`}
+              {/* Admin Actions */}
+              <div className="flex items-center gap-2 pt-3 border-t border-slate-100 mt-2">
+                <button
+                  onClick={() => setPreviewFile(file)}
+                  className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
                 >
                   <Eye size={14} />
-                  Preview
-                </a>
-                <a 
-                  href={file.url === "https://placeholder.com" ? "#" : file.url}
-                  download={file.name}
-                  onClick={(e) => file.url === "https://placeholder.com" && e.preventDefault()}
-                  className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                    file.url === "https://placeholder.com" 
-                      ? "bg-slate-200 text-white cursor-not-allowed" 
-                      : "bg-slate-900 text-white hover:bg-slate-800"
-                  }`}
+                  Pop-up Preview
+                </button>
+                <button
+                  onClick={() => copyShareLink(file)}
+                  className="p-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-colors shrink-0"
+                  title="Copy share link"
                 >
-                  <Download size={14} />
-                  Get
-                </a>
+                  {copiedId === file.id ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
+                </button>
               </div>
             </motion.div>
           ))}
-        </AnimatePresence>
-        
-        {files.length === 0 && !uploading && (
-          <div className="col-span-full py-20 text-center">
-            <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-200 mx-auto mb-6">
-              <File size={32} />
-            </div>
-            <h4 className="text-xl font-bold text-slate-400">Storage is empty</h4>
-            <p className="text-slate-300 font-medium">Your uploaded files will appear here.</p>
-          </div>
+        </div>
+      )}
+
+      {/* ── Unified Share Modal ── */}
+      <AnimatePresence>
+        {isShareModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 16 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 16 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-slate-200 relative"
+            >
+              {/* Accent line */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-t-3xl" />
+
+              {/* Header */}
+              <div className="flex items-center justify-between mb-5 mt-1">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-blue-50 rounded-xl">
+                    <Share2 size={18} className="text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900">Share Resource</h3>
+                </div>
+                <button
+                  onClick={() => setIsShareModalOpen(false)}
+                  className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Tab switcher */}
+              <div className="flex bg-slate-100 rounded-2xl p-1 mb-6 gap-1">
+                <button
+                  onClick={() => setShareTab("text")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                    shareTab === "text"
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  <Type size={14} />
+                  Text / Snippet
+                </button>
+                <button
+                  onClick={() => setShareTab("file")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                    shareTab === "file"
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  <Paperclip size={14} />
+                  Upload File
+                </button>
+              </div>
+
+              {/* ── TEXT TAB ── */}
+              {shareTab === "text" && (
+                <form onSubmit={handleSubmitText} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Snippet Title
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Instructions.txt or API Key Notes"
+                      value={snippetTitle}
+                      onChange={(e) => setSnippetTitle(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Text / Code Content
+                    </label>
+                    <textarea
+                      rows={6}
+                      required
+                      placeholder="Enter text or code to share in the user pop-up..."
+                      value={snippetText}
+                      onChange={(e) => setSnippetText(e.target.value)}
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-none"
+                    />
+                  </div>
+
+                  <PermissionPicker value={allowDownload} onChange={setAllowDownload} />
+
+                  <button
+                    type="submit"
+                    className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-sm transition-all shadow-md"
+                  >
+                    Share to Users
+                  </button>
+                </form>
+              )}
+
+              {/* ── FILE TAB ── */}
+              {shareTab === "file" && (
+                <form onSubmit={handleSubmitFile} className="space-y-4">
+                  {/* Drop zone */}
+                  <div
+                    ref={dropRef}
+                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={onDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`relative border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
+                      isDragging
+                        ? "border-blue-500 bg-blue-50"
+                        : pickedFile
+                        ? "border-emerald-400 bg-emerald-50"
+                        : "border-slate-200 hover:border-blue-400 hover:bg-blue-50/30"
+                    }`}
+                  >
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={(e) => e.target.files?.[0] && setPickedFile(e.target.files[0])}
+                      className="hidden"
+                    />
+
+                    {pickedFile ? (
+                      <>
+                        <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center mb-3">
+                          {getFileIcon(pickedFile.type, 24)}
+                        </div>
+                        <p className="font-bold text-sm text-slate-900 truncate max-w-full px-4">{pickedFile.name}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{(pickedFile.size / 1024).toFixed(1)} KB</p>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setPickedFile(null); }}
+                          className="mt-3 text-xs text-red-500 hover:underline font-semibold"
+                        >
+                          Remove
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mb-3 text-slate-400">
+                          <Upload size={24} />
+                        </div>
+                        <p className="font-bold text-sm text-slate-700">Drop file here or click to browse</p>
+                        <p className="text-xs text-slate-400 mt-1">Any file type supported</p>
+                      </>
+                    )}
+
+                    {/* Upload progress overlay */}
+                    {uploading && (
+                      <div className="absolute inset-0 bg-white/90 rounded-2xl flex flex-col items-center justify-center">
+                        <p className="text-sm font-bold text-slate-900 mb-2">Uploading… {progress}%</p>
+                        <div className="w-48 h-2 bg-slate-200 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${progress}%` }} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <PermissionPicker value={allowDownload} onChange={setAllowDownload} />
+
+                  <button
+                    type="submit"
+                    disabled={!pickedFile || uploading}
+                    className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-2xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2"
+                  >
+                    <Upload size={16} />
+                    {uploading ? "Uploading…" : "Upload & Share"}
+                  </button>
+                </form>
+              )}
+            </motion.div>
+          </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* ── Pop-up Preview Modal ── */}
+      <AnimatePresence>
+        {previewFile && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl border border-slate-200 relative flex flex-col max-h-[85vh]"
+            >
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  {getFileIcon(previewFile.type)}
+                  <h3 className="text-lg font-bold text-slate-900 truncate max-w-xs">{previewFile.name}</h3>
+                </div>
+                <button onClick={() => setPreviewFile(null)} className="text-slate-400 hover:text-slate-900">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto my-4 space-y-4">
+                {previewFile.allow_download !== false ? (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full">
+                    <Download size={12} /> Users Allowed to Download
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full">
+                    <Ban size={12} /> Just See (Download Disabled)
+                  </span>
+                )}
+
+                {previewFile.content ? (
+                  <pre className="p-4 bg-slate-900 text-slate-100 rounded-2xl text-xs font-mono leading-relaxed whitespace-pre-wrap overflow-x-auto">
+                    {previewFile.content}
+                  </pre>
+                ) : previewFile.url && previewFile.type.startsWith("image/") ? (
+                  <img src={previewFile.url} alt={previewFile.name} className="w-full h-auto max-h-80 object-contain rounded-2xl bg-slate-900" />
+                ) : (
+                  <p className="text-xs text-slate-500 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    File URL: {previewFile.url || "In-memory file"}
+                  </p>
+                )}
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex justify-end">
+                <button
+                  onClick={() => setPreviewFile(null)}
+                  className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold"
+                >
+                  Close Preview
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ── Reusable Permission Picker Component ── */
+function PermissionPicker({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80">
+      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+        User Download Permission
+      </label>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <label className={`flex-1 p-3 rounded-xl border flex items-center gap-2 cursor-pointer transition-all ${
+          value ? "bg-blue-50 border-blue-500 text-blue-900 font-bold" : "bg-white border-slate-200 text-slate-600"
+        }`}>
+          <input type="radio" name="perm" checked={value} onChange={() => onChange(true)} className="hidden" />
+          <Download size={16} />
+          <span className="text-xs">Allow Download</span>
+        </label>
+
+        <label className={`flex-1 p-3 rounded-xl border flex items-center gap-2 cursor-pointer transition-all ${
+          !value ? "bg-amber-50 border-amber-500 text-amber-900 font-bold" : "bg-white border-slate-200 text-slate-600"
+        }`}>
+          <input type="radio" name="perm" checked={!value} onChange={() => onChange(false)} className="hidden" />
+          <Ban size={16} />
+          <span className="text-xs">Just See (View Only)</span>
+        </label>
       </div>
     </div>
   );

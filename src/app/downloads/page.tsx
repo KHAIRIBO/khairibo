@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Download, 
   File, 
@@ -11,23 +11,35 @@ import {
   FolderArchive,
   Search,
   Grid3x3,
-  List
+  List,
+  Eye,
+  X,
+  Ban,
+  Copy,
+  Check,
+  Globe
 } from "lucide-react";
 
-interface PublicFile {
+interface SharedFile {
   id: string;
   name: string;
   size: string;
   type: string;
   url: string;
+  content?: string;
   created_at: string;
+  allow_download?: boolean;
 }
 
 export default function DownloadsPage() {
-  const [files, setFiles] = useState<PublicFile[]>([]);
+  const [files, setFiles] = useState<SharedFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  
+  // Pop-up Modal state
+  const [selectedFile, setSelectedFile] = useState<SharedFile | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetchFiles();
@@ -38,7 +50,7 @@ export default function DownloadsPage() {
     try {
       const res = await fetch('/api/files');
       const data = await res.json();
-      if (data && !Array.isArray(data.error)) {
+      if (Array.isArray(data)) {
         setFiles(data);
       }
     } catch (e) {
@@ -48,73 +60,73 @@ export default function DownloadsPage() {
   };
 
   const filteredFiles = files.filter(file => 
-    file.name.toLowerCase().includes(searchQuery.toLowerCase())
+    file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (file.content && file.content.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const getFileIcon = (type: string) => {
-    if (type.startsWith("image/")) return <ImageIcon size={28} className="text-blue-500" />;
-    if (type.includes("pdf")) return <FileText size={28} className="text-red-500" />;
-    if (type.includes("json") || type.includes("javascript") || type.includes("zip")) return <FileCode size={28} className="text-amber-500" />;
-    if (type.includes("video")) return <File size={28} className="text-purple-500" />;
-    return <File size={28} className="text-slate-500" />;
+    if (type.startsWith("image/")) return <ImageIcon size={26} className="text-blue-500" />;
+    if (type.includes("pdf") || type.includes("text")) return <FileText size={26} className="text-emerald-500" />;
+    if (type.includes("json") || type.includes("javascript") || type.includes("zip")) return <FileCode size={26} className="text-amber-500" />;
+    return <File size={26} className="text-slate-500" />;
   };
 
-  const getCategory = (type: string, name: string) => {
-    if (type.startsWith("image/")) return "Images";
-    if (type.includes("pdf")) return "Documents";
-    if (type.includes("video")) return "Videos";
-    if (type.includes("zip") || type.includes("compressed")) return "Archives";
-    if (name.endsWith('.mp4') || name.endsWith('.mov') || name.endsWith('.avi')) return "Videos";
-    if (name.endsWith('.mp3') || name.endsWith('.wav') || name.endsWith('.ogg')) return "Audio";
-    return "Files";
+  const copyTextContent = (content?: string) => {
+    if (!content) return;
+    navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-slate-50/60 pb-20">
       {/* Header */}
       <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-900 rounded-[2rem] mb-6">
-              <FolderArchive size={32} className="text-white" />
+            <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-slate-900 rounded-2xl sm:rounded-[2rem] mb-4 sm:mb-6 shadow-lg shadow-slate-900/10">
+              <FolderArchive size={28} className="text-white" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-4">
-              Download Center
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-3">
+              Shared Resource Hub
             </h1>
-            <p className="text-lg text-slate-500 max-w-2xl mx-auto">
-              Access and download files, videos, notes, and other resources shared by the admin.
+            <p className="text-sm sm:text-base text-slate-500 max-w-2xl mx-auto font-medium">
+              View shared files, code notes, and text snippets in pop-up previews or download permitted files.
             </p>
           </motion.div>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
           <div className="relative w-full sm:w-96">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
               type="text"
-              placeholder="Search files..."
+              placeholder="Search shared files & text notes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-900/5 text-slate-900 placeholder-slate-400"
+              className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 placeholder-slate-400 text-xs sm:text-sm font-medium shadow-xs"
             />
           </div>
+
           <div className="flex gap-2 bg-white p-1 rounded-2xl border border-slate-200">
             <button
               onClick={() => setViewMode("grid")}
               className={`p-2.5 rounded-xl transition-all ${viewMode === "grid" ? "bg-slate-900 text-white" : "text-slate-400 hover:text-slate-600"}`}
+              title="Grid View"
             >
               <Grid3x3 size={18} />
             </button>
             <button
               onClick={() => setViewMode("list")}
               className={`p-2.5 rounded-xl transition-all ${viewMode === "list" ? "bg-slate-900 text-white" : "text-slate-400 hover:text-slate-600"}`}
+              title="List View"
             >
               <List size={18} />
             </button>
@@ -122,20 +134,20 @@ export default function DownloadsPage() {
         </div>
       </div>
 
-      {/* Files */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+      {/* Shared Items */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-2 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-slate-200 border-t-blue-600 rounded-full animate-spin" />
           </div>
         ) : filteredFiles.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="w-16 h-16 bg-slate-100 rounded-[2rem] flex items-center justify-center text-slate-300 mx-auto mb-4">
+          <div className="text-center py-20 bg-white rounded-3xl border border-slate-200/80 p-8 max-w-lg mx-auto">
+            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 mx-auto mb-4">
               <File size={28} />
             </div>
-            <h3 className="text-xl font-bold text-slate-400 mb-2">No files found</h3>
-            <p className="text-slate-400 font-medium">
-              {searchQuery ? "Try adjusting your search" : "Files will appear here once uploaded"}
+            <h3 className="text-lg font-bold text-slate-700 mb-1">No shared files found</h3>
+            <p className="text-slate-400 text-xs font-medium">
+              {searchQuery ? "Try adjusting your search query." : "Admin shared files and text notes will appear here."}
             </p>
           </div>
         ) : viewMode === "grid" ? (
@@ -143,92 +155,127 @@ export default function DownloadsPage() {
             {filteredFiles.map((file, idx) => (
               <motion.div
                 key={file.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="group"
+                transition={{ delay: idx * 0.04 }}
+                className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs hover:shadow-xl transition-all flex flex-col justify-between group"
               >
-                <div className="p-6 bg-white rounded-[2rem] border border-slate-100 shadow-lg shadow-slate-200/40 hover:shadow-xl hover:shadow-slate-200/60 hover:-translate-y-1 transition-all h-full flex flex-col">
+                <div>
                   <div className="flex items-start justify-between mb-4">
-                    <div className="p-3 bg-slate-50 rounded-[1.25rem] group-hover:bg-slate-900 group-hover:text-white transition-all">
+                    <div className="p-3 bg-slate-100 rounded-xl group-hover:bg-slate-900 group-hover:text-white transition-colors">
                       {getFileIcon(file.type)}
                     </div>
-                    <span className="px-3 py-1 bg-slate-50 rounded-lg text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                      {getCategory(file.type, file.name)}
-                    </span>
+
+                    {file.allow_download === false ? (
+                      <span className="px-2.5 py-1 bg-amber-50 text-amber-700 text-[10px] font-bold rounded-lg border border-amber-200/80 flex items-center gap-1">
+                        <Ban size={11} /> View Only
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200/80 flex items-center gap-1">
+                        <Download size={11} /> Downloadable
+                      </span>
+                    )}
                   </div>
                   
-                  <h3 className="font-bold text-slate-900 truncate mb-1" title={file.name}>
+                  <h3 className="font-bold text-slate-900 truncate text-sm sm:text-base mb-1" title={file.name}>
                     {file.name}
                   </h3>
-                  <div className="flex items-center gap-2 text-xs text-slate-400 font-medium mb-6">
-                    <span>{file.size}</span>
-                    <span>•</span>
-                    <span>{new Date(file.created_at).toLocaleDateString()}</span>
+
+                  <div className="text-xs text-slate-400 font-medium mb-4">
+                    {file.size} • {new Date(file.created_at).toLocaleDateString()}
                   </div>
 
-                  <a
-                    href={file.url}
-                    download={file.name}
-                    className="mt-auto flex items-center justify-center gap-2 w-full py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all"
+                  {file.content && (
+                    <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-700 font-mono line-clamp-3 mb-5 border border-slate-100">
+                      {file.content}
+                    </div>
+                  )}
+                </div>
+
+                {/* Pop-up Action Buttons */}
+                <div className="flex items-center gap-2 pt-4 border-t border-slate-100 mt-2">
+                  <button
+                    onClick={() => setSelectedFile(file)}
+                    className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
                   >
-                    <Download size={16} />
-                    Download
-                  </a>
+                    <Eye size={14} />
+                    View Pop-up
+                  </button>
+
+                  {file.allow_download !== false && file.url && (
+                    <a
+                      href={file.url}
+                      download={file.name}
+                      className="py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shrink-0"
+                    >
+                      <Download size={14} />
+                      Get
+                    </a>
+                  )}
                 </div>
               </motion.div>
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-[2rem] border border-slate-100 shadow-lg shadow-slate-200/40 overflow-hidden">
+          <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-slate-100">
-                    <th className="text-left px-8 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Name</th>
-                    <th className="text-left px-8 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Category</th>
-                    <th className="text-left px-8 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Size</th>
-                    <th className="text-left px-8 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Date</th>
-                    <th className="text-right px-8 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Action</th>
+                  <tr className="border-b border-slate-100 bg-slate-50/50">
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Access</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Size</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {filteredFiles.map((file, idx) => (
-                    <motion.tr
-                      key={file.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: idx * 0.03 }}
-                      className="border-b border-slate-50 last:border-b-0 hover:bg-slate-50/50 transition-colors"
-                    >
-                      <td className="px-8 py-4">
+                <tbody className="divide-y divide-slate-100">
+                  {filteredFiles.map((file) => (
+                    <tr key={file.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-slate-50 rounded-xl">
+                          <div className="p-2 bg-slate-100 rounded-lg">
                             {getFileIcon(file.type)}
                           </div>
-                          <span className="font-bold text-slate-900 truncate max-w-xs">{file.name}</span>
+                          <span className="font-bold text-slate-900 text-sm truncate max-w-xs">{file.name}</span>
                         </div>
                       </td>
-                      <td className="px-8 py-4">
-                        <span className="px-3 py-1 bg-slate-50 rounded-lg text-xs font-bold text-slate-500">
-                          {getCategory(file.type, file.name)}
-                        </span>
+                      <td className="px-6 py-4">
+                        {file.allow_download === false ? (
+                          <span className="px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-md inline-flex items-center gap-1">
+                            <Ban size={12} /> View Only
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-md inline-flex items-center gap-1">
+                            <Download size={12} /> Downloadable
+                          </span>
+                        )}
                       </td>
-                      <td className="px-8 py-4 text-sm text-slate-500 font-medium">{file.size}</td>
-                      <td className="px-8 py-4 text-sm text-slate-500 font-medium">
+                      <td className="px-6 py-4 text-xs text-slate-500 font-medium">{file.size}</td>
+                      <td className="px-6 py-4 text-xs text-slate-500 font-medium">
                         {new Date(file.created_at).toLocaleDateString()}
                       </td>
-                      <td className="px-8 py-4 text-right">
-                        <a
-                          href={file.url}
-                          download={file.name}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all"
-                        >
-                          <Download size={14} />
-                          Download
-                        </a>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => setSelectedFile(file)}
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold inline-flex items-center gap-1 transition-colors"
+                          >
+                            <Eye size={13} /> View Pop-up
+                          </button>
+
+                          {file.allow_download !== false && file.url && (
+                            <a
+                              href={file.url}
+                              download={file.name}
+                              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1 transition-colors"
+                            >
+                              <Download size={13} /> Download
+                            </a>
+                          )}
+                        </div>
                       </td>
-                    </motion.tr>
+                    </tr>
                   ))}
                 </tbody>
               </table>
@@ -236,6 +283,131 @@ export default function DownloadsPage() {
           </div>
         )}
       </div>
+
+      {/* POP-UP MODAL PREVIEW */}
+      <AnimatePresence>
+        {selectedFile && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedFile(null)}
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-[100] flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 10 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl border border-slate-200 relative flex flex-col max-h-[90vh]"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-slate-100 rounded-xl">
+                    {getFileIcon(selectedFile.type)}
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate max-w-xs sm:max-w-md">
+                      {selectedFile.name}
+                    </h3>
+                    <p className="text-xs text-slate-400 font-medium">
+                      Shared on {new Date(selectedFile.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setSelectedFile(null)}
+                  className="p-2 text-slate-400 hover:text-slate-900 rounded-xl transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Modal Content Preview */}
+              <div className="flex-1 overflow-y-auto my-6 space-y-4 pr-1">
+                {/* Permission Banner */}
+                {selectedFile.allow_download === false ? (
+                  <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-2xl flex items-center justify-between text-amber-900 text-xs font-semibold">
+                    <span className="flex items-center gap-1.5">
+                      <Ban size={15} className="text-amber-600" />
+                      View Only Mode — Download option disabled by Admin
+                    </span>
+                    <span className="px-2 py-0.5 bg-amber-100 rounded text-[10px] uppercase font-bold">Read Only</span>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-blue-50 border border-blue-200/80 rounded-2xl flex items-center justify-between text-blue-900 text-xs font-semibold">
+                    <span className="flex items-center gap-1.5">
+                      <Download size={15} className="text-blue-600" />
+                      Download Allowed — You can save this resource to your device
+                    </span>
+                    <span className="px-2 py-0.5 bg-blue-100 rounded text-[10px] uppercase font-bold">Permitted</span>
+                  </div>
+                )}
+
+                {/* Display Text Content if Snippet */}
+                {selectedFile.content ? (
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Shared Text Content</span>
+                      <button
+                        onClick={() => copyTextContent(selectedFile.content)}
+                        className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                      >
+                        {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                        {copied ? "Copied!" : "Copy Text"}
+                      </button>
+                    </div>
+                    <pre className="p-5 bg-slate-900 text-slate-100 rounded-2xl text-xs font-mono leading-relaxed whitespace-pre-wrap overflow-x-auto border border-slate-800 shadow-inner">
+                      {selectedFile.content}
+                    </pre>
+                  </div>
+                ) : selectedFile.url && selectedFile.type.startsWith("image/") ? (
+                  <div className="rounded-2xl overflow-hidden bg-slate-900 flex items-center justify-center p-2">
+                    <img 
+                      src={selectedFile.url} 
+                      alt={selectedFile.name} 
+                      className="w-full max-h-96 object-contain rounded-xl"
+                    />
+                  </div>
+                ) : (
+                  <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200/80 text-center">
+                    <File size={40} className="mx-auto text-slate-400 mb-2" />
+                    <p className="text-sm font-bold text-slate-700">{selectedFile.name}</p>
+                    <p className="text-xs text-slate-400 mt-1">{selectedFile.size}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer Controls */}
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                <button
+                  onClick={() => setSelectedFile(null)}
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition-colors"
+                >
+                  Close
+                </button>
+
+                {selectedFile.allow_download !== false && selectedFile.url ? (
+                  <a
+                    href={selectedFile.url}
+                    download={selectedFile.name}
+                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md transition-colors"
+                  >
+                    <Download size={15} />
+                    Download File
+                  </a>
+                ) : (
+                  <span className="text-xs text-amber-700 font-bold bg-amber-50 px-4 py-2 rounded-xl border border-amber-200">
+                    Download Disabled
+                  </span>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
