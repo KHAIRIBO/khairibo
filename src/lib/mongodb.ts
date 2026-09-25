@@ -1,11 +1,10 @@
 import { MongoClient, Db } from 'mongodb';
 
-const uri = process.env.MONGODB_URI || '';
-const dbName = 'khairibo';
+const uri =
+  process.env.MONGODB_URI ||
+  'mongodb+srv://Vercel-Admin-khairibosite:bCANNJCURcqdE6nf@khairibosite.b0dpds4.mongodb.net/?appName=khairibosite&compressors=zlib';
 
-if (!uri) {
-  console.warn('⚠️  MONGODB_URI is not set. Files will use local fallback storage.');
-}
+const dbName = 'khairibo';
 
 let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
@@ -16,21 +15,28 @@ declare global {
 }
 
 if (process.env.NODE_ENV === 'development') {
-  // In development, use a global variable so the value is preserved
-  // across module reloads caused by HMR (Hot Module Replacement).
-  if (!global._mongoClientPromise && uri) {
+  if (!global._mongoClientPromise) {
     client = new MongoClient(uri);
     global._mongoClientPromise = client.connect();
   }
-  clientPromise = global._mongoClientPromise || Promise.reject(new Error('No MongoDB URI'));
+  clientPromise = global._mongoClientPromise;
 } else {
-  // In production, it's best to not use a global variable.
-  if (uri) {
-    client = new MongoClient(uri);
-    clientPromise = client.connect();
-  } else {
-    clientPromise = Promise.reject(new Error('No MongoDB URI'));
+  client = new MongoClient(uri);
+  clientPromise = client.connect();
+}
+
+export async function connectToMongoDB() {
+  try {
+    const c = await clientPromise;
+    console.log('You successfully connected to MongoDB!');
+    return c;
+  } catch (err) {
+    console.dir(err);
   }
+}
+
+export async function disconnectFromMongoDB() {
+  await client.close();
 }
 
 export async function getDb(): Promise<Db | null> {
