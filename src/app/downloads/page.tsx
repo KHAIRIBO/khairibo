@@ -78,6 +78,32 @@ export default function DownloadsPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleDownloadFile = (file: SharedFile) => {
+    if (file.allow_download === false) return;
+    if (file.content && (!file.url || file.type?.includes("text"))) {
+      const blob = new Blob([file.content], { type: file.type || "text/plain" });
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = file.name.includes(".") ? file.name : `${file.name}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+      return;
+    }
+    if (file.url) {
+      const link = document.createElement("a");
+      link.href = file.url;
+      link.download = file.name;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50/60 pb-20">
       {/* Header */}
@@ -202,15 +228,14 @@ export default function DownloadsPage() {
                     View Pop-up
                   </button>
 
-                  {file.allow_download !== false && file.url && (
-                    <a
-                      href={file.url}
-                      download={file.name}
-                      className="py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shrink-0"
+                  {file.allow_download !== false && (
+                    <button
+                      onClick={() => handleDownloadFile(file)}
+                      className="py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shrink-0 cursor-pointer"
                     >
                       <Download size={14} />
                       Get
-                    </a>
+                    </button>
                   )}
                 </div>
               </motion.div>
@@ -264,14 +289,13 @@ export default function DownloadsPage() {
                             <Eye size={13} /> View Pop-up
                           </button>
 
-                          {file.allow_download !== false && file.url && (
-                            <a
-                              href={file.url}
-                              download={file.name}
-                              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1 transition-colors"
+                          {file.allow_download !== false && (
+                            <button
+                              onClick={() => handleDownloadFile(file)}
+                              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1 transition-colors cursor-pointer"
                             >
                               <Download size={13} /> Download
-                            </a>
+                            </button>
                           )}
                         </div>
                       </td>
@@ -389,18 +413,17 @@ export default function DownloadsPage() {
                   Close
                 </button>
 
-                {selectedFile.allow_download !== false && selectedFile.url ? (
-                  <a
-                    href={selectedFile.url}
-                    download={selectedFile.name}
-                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md transition-colors"
+                {selectedFile.allow_download !== false ? (
+                  <button
+                    onClick={() => handleDownloadFile(selectedFile)}
+                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md transition-colors cursor-pointer"
                   >
                     <Download size={15} />
-                    Download File
-                  </a>
+                    Download {selectedFile.content && (!selectedFile.url || selectedFile.type?.includes("text")) ? "Note" : "File"}
+                  </button>
                 ) : (
                   <span className="text-xs text-amber-700 font-bold bg-amber-50 px-4 py-2 rounded-xl border border-amber-200">
-                    Download Disabled
+                    Download Disabled (View Only)
                   </span>
                 )}
               </div>

@@ -23,8 +23,9 @@ export default function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProp
     if (code === ACCESS_CODE) {
       setIsSuccess(true);
       setError(false);
-      // Store session
+      // Store session and token
       localStorage.setItem("admin_session", "active");
+      localStorage.setItem("admin_token", code);
       setTimeout(() => {
         router.push("/admin");
         onClose();
@@ -35,7 +36,7 @@ export default function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProp
       setCode("");
     }
   };
-
+  
   return (
     <AnimatePresence>
       {isOpen && (
