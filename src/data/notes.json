@@ -1,0 +1,20 @@
+[
+  {
+    "id": "note-1794400309589-pjsj",
+    "title": "Roadmap Q4",
+    "content": "Complete full-stack dashboard implementation with MongoDB Atlas dual persistence.",
+    "category": "Projects",
+    "tags": [
+      "saas",
+      "release",
+      "production"
+    ],
+    "folderId": null,
+    "isPinned": false,
+    "isFavorite": false,
+    "isTrash": false,
+    "trashedAt": null,
+    "createdAt": "2026-11-11T12:31:49.589Z",
+    "updatedAt": "2026-11-11T12:31:49.589Z"
+  }
+]

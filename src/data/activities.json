@@ -1,0 +1,87 @@
+[
+  {
+    "id": "act-1795184332195-nana",
+    "type": "login",
+    "title": "Admin Logged In",
+    "description": "Successful login from ::1",
+    "targetType": "system",
+    "timestamp": "2026-11-20T14:18:52.196Z"
+  },
+  {
+    "id": "act-1795184200220-lvfe",
+    "type": "login",
+    "title": "Admin Logged In",
+    "description": "Successful login from ::1",
+    "targetType": "system",
+    "timestamp": "2026-11-20T14:16:40.220Z"
+  },
+  {
+    "id": "act-1795184044541-8ipw",
+    "type": "login",
+    "title": "Admin Logged In",
+    "description": "Successful login from ::1",
+    "targetType": "system",
+    "timestamp": "2026-11-20T14:14:04.541Z"
+  },
+  {
+    "id": "act-1795183669114-t7qj",
+    "type": "login",
+    "title": "Admin Logged In",
+    "description": "Successful login from ::1",
+    "targetType": "system",
+    "timestamp": "2026-11-20T14:07:49.114Z"
+  },
+  {
+    "id": "act-1794400311191-m42y",
+    "type": "file_update",
+    "title": "File Updated",
+    "description": "Restored \"architecture-spec.txt\" from Trash",
+    "targetId": "file-1794400308838-8cl3r9",
+    "targetType": "file",
+    "timestamp": "2026-11-11T12:31:51.191Z"
+  },
+  {
+    "id": "act-1794400310691-sywq",
+    "type": "file_update",
+    "title": "File Updated",
+    "description": "Moved \"architecture-spec.txt\" to Trash",
+    "targetId": "file-1794400308838-8cl3r9",
+    "targetType": "file",
+    "timestamp": "2026-11-11T12:31:50.691Z"
+  },
+  {
+    "id": "act-1794400309743-sc6p",
+    "type": "note_create",
+    "title": "Created Note",
+    "description": "Created note \"Roadmap Q4\"",
+    "targetId": "note-1794400309589-pjsj",
+    "targetType": "note",
+    "timestamp": "2026-11-11T12:31:49.743Z"
+  },
+  {
+    "id": "act-1794400308998-8067",
+    "type": "file_upload",
+    "title": "Uploaded File",
+    "description": "Uploaded \"architecture-spec.txt\" (54 Bytes)",
+    "targetId": "file-1794400308838-8cl3r9",
+    "targetType": "file",
+    "timestamp": "2026-11-11T12:31:48.998Z"
+  },
+  {
+    "id": "act-1794400308264-c36y",
+    "type": "folder_create",
+    "title": "Created Folder",
+    "description": "Created folder \"Project Documents\"",
+    "targetId": "fld-1794400308117-ph8f",
+    "targetType": "folder",
+    "timestamp": "2026-11-11T12:31:48.264Z"
+  },
+  {
+    "id": "act-1794400306164-v3q1",
+    "type": "login",
+    "title": "Admin Logged In",
+    "description": "Successful login from ::1",
+    "targetType": "system",
+    "timestamp": "2026-11-11T12:31:46.164Z"
+  }
+]

@@ -1,293 +1,681 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Plus, 
-  Search, 
-  Trash2, 
-  Edit3, 
-  FileText, 
-  Save, 
+import {
+  Plus,
+  Search,
+  Trash2,
+  FileText,
+  Pin,
+  Tag,
+  Folder,
+  Calendar,
+  Check,
+  Clock,
+  Bold,
+  Italic,
+  Strikethrough,
+  Heading1,
+  Heading2,
+  List,
+  ListOrdered,
+  Quote,
+  Code,
+  Share2,
+  Sparkles,
+  ChevronRight,
+  Filter,
   X,
-  MoreVertical,
-  CheckCircle2
+  Star,
 } from "lucide-react";
+import { toast } from "sonner";
 
-import { supabase } from "@/lib/supabase";
-
-interface Note {
+interface SaaSNote {
   id: string;
   title: string;
   content: string;
-  updated_at: string;
   category: string;
+  tags: string[];
+  folderId: string | null;
+  isPinned: boolean;
+  isFavorite: boolean;
+  isTrash: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export default function NotesPage() {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentNote, setCurrentNote] = useState<Note | null>(null);
-  const [showToast, setShowToast] = useState(false);
+const CATEGORIES = ["All", "Work", "Personal", "Ideas", "Projects", "Todo", "Snippets"];
 
-  // Fetch notes from Supabase
+export default function NotesPage() {
+  const searchParams = useSearchParams();
+  const requestedNoteId = searchParams.get("id");
+
+  const [notes, setNotes] = useState<SaaSNote[]>([]);
+  const [selectedNote, setSelectedNote] = useState<SaaSNote | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Filters & Search
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
+
+  // Editor states
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editCategory, setEditCategory] = useState("Work");
+  const [editTags, setEditTags] = useState<string[]>([]);
+  const [newTagInput, setNewTagInput] = useState("");
+
+  // Autosave status
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // ── Fetch Notes ────────────────────────────────────────────────────────────
+  const fetchNotes = useCallback(async () => {
+    try {
+      const res = await fetch("/api/saas/notes");
+      if (res.ok) {
+        const data: SaaSNote[] = await res.json();
+        const activeNotes = data.filter((n) => !n.isTrash);
+        setNotes(activeNotes);
+
+        if (requestedNoteId) {
+          const match = activeNotes.find((n) => n.id === requestedNoteId);
+          if (match) {
+            selectNote(match);
+            return;
+          }
+        }
+
+        if (activeNotes.length > 0 && !selectedNote) {
+          selectNote(activeNotes[0]);
+        }
+      }
+    } catch {
+      toast.error("Failed to load notes");
+    } finally {
+      setLoading(false);
+    }
+  }, [requestedNoteId]);
+
   useEffect(() => {
     fetchNotes();
-  }, []);
+  }, [fetchNotes]);
 
-  const fetchNotes = async () => {
-    const { data, error } = await supabase
-      .from('notes')
-      .select('*')
-      .order('updated_at', { ascending: false });
-    
-    if (data) setNotes(data);
+  // ── Select Note ────────────────────────────────────────────────────────────
+  const selectNote = (note: SaaSNote) => {
+    setSelectedNote(note);
+    setEditTitle(note.title);
+    setEditContent(note.content);
+    setEditCategory(note.category || "General");
+    setEditTags(note.tags || []);
+    setSaveStatus("idle");
   };
 
-  const handleCreateNote = async () => {
-    const newNote = {
-      title: "Untitled Note",
-      content: "",
-      category: "General",
-    };
-    
-    const { data, error } = await supabase
-      .from('notes')
-      .insert([newNote])
-      .select()
-      .single();
+  // ── Debounced Autosave ─────────────────────────────────────────────────────
+  const triggerAutosave = useCallback(
+    (title: string, content: string, category: string, tags: string[]) => {
+      if (!selectedNote) return;
 
-    if (data) {
-      setNotes([data, ...notes]);
-      setCurrentNote(data);
-      setIsEditing(true);
-    }
-  };
+      setSaveStatus("saving");
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
 
-  const handleDeleteNote = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const { error } = await supabase
-      .from('notes')
-      .delete()
-      .eq('id', id);
+      autosaveTimerRef.current = setTimeout(async () => {
+        try {
+          const res = await fetch("/api/saas/notes", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: selectedNote.id,
+              title: title.trim() || "Untitled Note",
+              content,
+              category,
+              tags,
+            }),
+          });
 
-    if (!error) {
-      setNotes(notes.filter(n => n.id !== id));
-      if (currentNote?.id === id) {
-        setIsEditing(false);
-        setCurrentNote(null);
-      }
-    }
-  };
-
-  const handleUpdateNote = async (field: keyof Note, value: string) => {
-    if (!currentNote) return;
-    const updatedNote = { ...currentNote, [field]: value, updated_at: new Date().toISOString() };
-    setCurrentNote(updatedNote);
-    
-    const { error } = await supabase
-      .from('notes')
-      .update({ [field]: value, updated_at: new Date().toISOString() })
-      .eq('id', updatedNote.id);
-
-    if (!error) {
-      setNotes(notes.map(n => n.id === updatedNote.id ? updatedNote : n));
-    }
-  };
-
-  const filteredNotes = notes.filter(n => 
-    n.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    n.content.toLowerCase().includes(searchQuery.toLowerCase())
+          if (res.ok) {
+            const updated = await res.json();
+            setNotes((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
+            setSelectedNote(updated);
+            setSaveStatus("saved");
+            const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+            setLastSavedAt(timeStr);
+          }
+        } catch {
+          setSaveStatus("idle");
+        }
+      }, 600);
+    },
+    [selectedNote]
   );
 
-  return (
-    <div className="h-full flex flex-col gap-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Personal Notes</h1>
-          <p className="text-slate-500 font-medium">Capture ideas and store information securely.</p>
-        </div>
-        <button 
-          onClick={handleCreateNote}
-          className="flex items-center gap-2 px-6 py-3.5 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10 hover:-translate-y-0.5 active:translate-y-0"
-        >
-          <Plus size={20} />
-          Create Note
-        </button>
-      </div>
+  // Field change handlers
+  const handleTitleChange = (val: string) => {
+    setEditTitle(val);
+    triggerAutosave(val, editContent, editCategory, editTags);
+  };
 
-      <div className="flex-1 flex flex-col lg:flex-row gap-8 overflow-hidden min-h-[600px]">
-        {/* Notes List Sidebar */}
-        <div className="w-full lg:w-96 flex flex-col gap-4">
+  const handleContentChange = (val: string) => {
+    setEditContent(val);
+    triggerAutosave(editTitle, val, editCategory, editTags);
+  };
+
+  const handleCategoryChange = (cat: string) => {
+    setEditCategory(cat);
+    triggerAutosave(editTitle, editContent, cat, editTags);
+  };
+
+  const handleAddTag = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && newTagInput.trim()) {
+      e.preventDefault();
+      const cleanTag = newTagInput.trim().toLowerCase().replace(/^#/, "");
+      if (!editTags.includes(cleanTag)) {
+        const nextTags = [...editTags, cleanTag];
+        setEditTags(nextTags);
+        triggerAutosave(editTitle, editContent, editCategory, nextTags);
+      }
+      setNewTagInput("");
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    const nextTags = editTags.filter((t) => t !== tagToRemove);
+    setEditTags(nextTags);
+    triggerAutosave(editTitle, editContent, editCategory, nextTags);
+  };
+
+  // ── Create New Note ────────────────────────────────────────────────────────
+  const handleCreateNote = async () => {
+    try {
+      const res = await fetch("/api/saas/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "Untitled Note",
+          content: "",
+          category: selectedCategory === "All" ? "Work" : selectedCategory,
+          tags: [],
+        }),
+      });
+
+      if (res.ok) {
+        const newNote: SaaSNote = await res.json();
+        setNotes([newNote, ...notes]);
+        selectNote(newNote);
+        toast.success("New note created");
+      }
+    } catch {
+      toast.error("Failed to create note");
+    }
+  };
+
+  // ── Pin / Unpin Note ───────────────────────────────────────────────────────
+  const handleTogglePin = async (note: SaaSNote, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    try {
+      const res = await fetch("/api/saas/notes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: note.id, isPinned: !note.isPinned }),
+      });
+
+      if (res.ok) {
+        setNotes((prev) =>
+          prev.map((n) => (n.id === note.id ? { ...n, isPinned: !note.isPinned } : n))
+        );
+        if (selectedNote?.id === note.id) {
+          setSelectedNote({ ...selectedNote, isPinned: !note.isPinned });
+        }
+        toast.success(note.isPinned ? "Unpinned note" : "Pinned to top");
+      }
+    } catch {
+      toast.error("Error pinning note");
+    }
+  };
+
+  // ── Delete / Trash Note ────────────────────────────────────────────────────
+  const handleTrashNote = async (note: SaaSNote, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    try {
+      const res = await fetch("/api/saas/notes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: note.id, isTrash: true }),
+      });
+
+      if (res.ok) {
+        const remaining = notes.filter((n) => n.id !== note.id);
+        setNotes(remaining);
+        toast.success(`Moved "${note.title}" to trash`);
+        if (selectedNote?.id === note.id) {
+          setSelectedNote(remaining[0] || null);
+          if (remaining[0]) selectNote(remaining[0]);
+        }
+      }
+    } catch {
+      toast.error("Failed to delete note");
+    }
+  };
+
+  // ── Rich Text Toolbar helpers ──────────────────────────────────────────────
+  const insertFormat = (prefix: string, suffix: string = "") => {
+    const el = textareaRef.current;
+    if (!el) return;
+
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const text = el.value;
+    const selection = text.substring(start, end);
+
+    const replacement = `${prefix}${selection || "text"}${suffix}`;
+    const newContent = text.substring(0, start) + replacement + text.substring(end);
+
+    setEditContent(newContent);
+    triggerAutosave(editTitle, newContent, editCategory, editTags);
+
+    setTimeout(() => {
+      el.focus();
+      el.setSelectionRange(start + prefix.length, start + prefix.length + (selection.length || 4));
+    }, 50);
+  };
+
+  // ── Filter Notes ───────────────────────────────────────────────────────────
+  const filteredNotes = notes
+    .filter((note) => {
+      const matchesSearch =
+        !searchQuery ||
+        note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        note.content.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCat = selectedCategory === "All" || note.category === selectedCategory;
+      const matchesTag = !tagFilter || note.tags?.includes(tagFilter);
+      return matchesSearch && matchesCat && matchesTag;
+    })
+    .sort((a, b) => {
+      // Pinned notes always first
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
+
+  // Collect all unique tags for tag filter list
+  const allUniqueTags = Array.from(new Set(notes.flatMap((n) => n.tags || [])));
+
+  return (
+    <div className="h-[calc(100vh-4.5rem)] flex flex-col md:flex-row overflow-hidden bg-slate-50 dark:bg-[#0c0f12]">
+      {/* ── LEFT SIDEBAR: Notes List ───────────────────────────────────────── */}
+      <div className="w-full md:w-80 lg:w-96 flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#101418] shrink-0 h-full">
+        {/* Header & New Note Button */}
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-[#b8ff4d]" />
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">Notes</h2>
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-mono bg-slate-100 dark:bg-slate-800 text-slate-500">
+                {notes.length}
+              </span>
+            </div>
+
+            <button
+              onClick={handleCreateNote}
+              className="px-3 py-1.5 rounded-xl bg-[#b8ff4d] hover:bg-[#a6ec3c] text-black text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>New Note</span>
+            </button>
+          </div>
+
+          {/* Search bar */}
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Search notes..." 
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-slate-900/5 transition-all font-medium"
+              placeholder="Search in notes..."
+              className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#b8ff4d]"
             />
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-            {filteredNotes.map((note) => (
-              <motion.div
-                key={note.id}
-                layoutId={note.id}
-                onClick={() => {
-                  setCurrentNote(note);
-                  setIsEditing(true);
-                }}
-                className={`p-5 rounded-3xl cursor-pointer border transition-all ${
-                  currentNote?.id === note.id 
-                    ? "bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-900/20" 
-                    : "bg-white text-slate-900 border-slate-100 hover:border-slate-300"
+          {/* Category Tabs */}
+          <div className="flex items-center gap-1 overflow-x-auto pb-1 text-xs">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                  selectedCategory === cat
+                    ? "bg-[#b8ff4d] text-black font-bold"
+                    : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold truncate pr-4">{note.title}</h3>
-                  <button 
-                    onClick={(e) => handleDeleteNote(note.id, e)}
-                    className={`p-1.5 rounded-lg transition-colors ${
-                      currentNote?.id === note.id ? "hover:bg-white/10 text-white/60" : "hover:bg-red-50 text-slate-400 hover:text-red-500"
-                    }`}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-                <p className={`text-sm line-clamp-2 mb-3 font-medium ${
-                  currentNote?.id === note.id ? "text-white/60" : "text-slate-500"
-                }`}>
-                  {note.content || "No content yet..."}
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className={`text-[10px] font-black uppercase tracking-widest ${
-                    currentNote?.id === note.id ? "text-white/40" : "text-slate-400"
-                  }`}>
-                    {new Date(note.updated_at).toLocaleDateString()}
-                  </span>
-                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest ${
-                    currentNote?.id === note.id ? "bg-white/10 text-white" : "bg-slate-100 text-slate-600"
-                  }`}>
-                    {note.category}
-                  </span>
-                </div>
-              </motion.div>
+                {cat}
+              </button>
             ))}
-            {filteredNotes.length === 0 && (
-              <div className="text-center py-20 bg-slate-50/50 rounded-[3rem] border border-dashed border-slate-200">
-                <FileText className="mx-auto text-slate-300 mb-4" size={48} />
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No notes found</p>
-              </div>
-            )}
           </div>
+
+          {/* Tag Filter Pills */}
+          {allUniqueTags.length > 0 && (
+            <div className="flex items-center gap-1.5 overflow-x-auto text-[11px] text-slate-400 pt-1">
+              <Tag className="w-3 h-3 shrink-0" />
+              {tagFilter && (
+                <button
+                  onClick={() => setTagFilter(null)}
+                  className="px-2 py-0.5 rounded-md bg-red-500/10 text-red-400 flex items-center gap-1"
+                >
+                  Clear #{tagFilter}
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              )}
+              {allUniqueTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => setTagFilter(tagFilter === tag ? null : tag)}
+                  className={`px-2 py-0.5 rounded-md transition-colors ${
+                    tagFilter === tag
+                      ? "bg-[#b8ff4d]/20 text-[#b8ff4d] font-bold"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  #{tag}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Note Editor Area */}
-        <div className="flex-1 bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col overflow-hidden">
-          <AnimatePresence mode="wait">
-            {isEditing && currentNote ? (
-              <motion.div 
-                key="editor"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="h-full flex flex-col"
-              >
-                {/* Editor Header */}
-                <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
-                  <div className="flex items-center gap-4">
-                    <select 
-                      value={currentNote.category}
-                      onChange={(e) => handleUpdateNote("category", e.target.value)}
-                      className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest text-slate-600 focus:outline-none focus:ring-4 focus:ring-slate-900/5 transition-all"
-                    >
-                      <option>General</option>
-                      <option>Personal</option>
-                      <option>Work</option>
-                      <option>Ideas</option>
-                    </select>
-                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
-                      Last saved: {new Date(currentNote.updated_at).toLocaleTimeString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => {
-                        setShowToast(true);
-                        setTimeout(() => setShowToast(false), 2000);
-                      }}
-                      className="p-2 text-slate-400 hover:text-slate-900 transition-colors"
-                    >
-                      <Save size={20} />
-                    </button>
-                    <button 
-                      onClick={() => setIsEditing(false)}
-                      className="p-2 text-slate-400 hover:text-slate-900 transition-colors"
-                    >
-                      <X size={20} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Editor Content */}
-                <div className="flex-1 flex flex-col p-8 space-y-6">
-                  <input 
-                    type="text" 
-                    value={currentNote.title}
-                    onChange={(e) => handleUpdateNote("title", e.target.value)}
-                    placeholder="Enter note title..."
-                    className="text-4xl font-black text-slate-900 placeholder:text-slate-200 focus:outline-none tracking-tight bg-transparent"
-                  />
-                  <textarea 
-                    value={currentNote.content}
-                    onChange={(e) => handleUpdateNote("content", e.target.value)}
-                    placeholder="Start writing your thoughts here..."
-                    className="flex-1 w-full text-lg text-slate-600 placeholder:text-slate-200 focus:outline-none resize-none bg-transparent font-medium leading-relaxed"
-                  />
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div 
-                key="empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="h-full flex flex-col items-center justify-center p-20 text-center"
-              >
-                <div className="w-24 h-24 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-200 mb-8">
-                  <Edit3 size={40} />
-                </div>
-                <h3 className="text-2xl font-black text-slate-900 mb-2">Editor Ready</h3>
-                <p className="text-slate-500 max-w-xs mx-auto mb-8 font-medium">Select a note from the sidebar or create a new one to start editing.</p>
-                <button 
-                  onClick={handleCreateNote}
-                  className="px-8 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900 font-bold hover:bg-slate-900 hover:text-white transition-all"
+        {/* Notes List Scroll Area */}
+        <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
+          {loading ? (
+            <div className="p-4 space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-20 rounded-xl bg-slate-100 dark:bg-slate-800/40 animate-pulse" />
+              ))}
+            </div>
+          ) : filteredNotes.length === 0 ? (
+            <div className="p-8 text-center text-slate-400">
+              <FileText className="w-8 h-8 mx-auto mb-2 opacity-40" />
+              <p className="text-xs">No notes found</p>
+            </div>
+          ) : (
+            filteredNotes.map((note) => {
+              const isSelected = selectedNote?.id === note.id;
+              return (
+                <div
+                  key={note.id}
+                  onClick={() => selectNote(note)}
+                  className={`p-3.5 cursor-pointer transition-all relative group ${
+                    isSelected
+                      ? "bg-[#b8ff4d]/5 dark:bg-[#b8ff4d]/10 border-l-4 border-[#b8ff4d]"
+                      : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                  }`}
                 >
-                  Create Your First Note
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        {note.isPinned && <Pin className="w-3 h-3 text-[#b8ff4d] fill-current shrink-0" />}
+                        <h4
+                          className={`text-xs font-bold truncate ${
+                            isSelected ? "text-[#b8ff4d]" : "text-slate-900 dark:text-white"
+                          }`}
+                        >
+                          {note.title || "Untitled Note"}
+                        </h4>
+                      </div>
+
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                        {note.content || "Empty note"}
+                      </p>
+
+                      <div className="flex items-center gap-2 mt-2 text-[10px] text-slate-400">
+                        <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                          {note.category}
+                        </span>
+                        <span>{new Date(note.updatedAt).toLocaleDateString()}</span>
+                        {note.tags && note.tags.length > 0 && (
+                          <span className="text-slate-400 truncate max-w-[100px]">
+                            #{note.tags.join(" #")}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Quick actions on hover */}
+                    <div
+                      className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        onClick={(e) => handleTogglePin(note, e)}
+                        className={`p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 ${
+                          note.isPinned ? "text-[#b8ff4d]" : "text-slate-400"
+                        }`}
+                        title={note.isPinned ? "Unpin" : "Pin"}
+                      >
+                        <Pin className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => handleTrashNote(note, e)}
+                        className="p-1 rounded text-slate-400 hover:text-red-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 
-      {/* Auto-save Toast */}
-      <AnimatePresence>
-        {showToast && (
-          <motion.div 
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-12 left-1/2 -translate-x-1/2 px-6 py-3 bg-slate-900 text-white rounded-2xl flex items-center gap-3 shadow-2xl z-[100]"
-          >
-            <CheckCircle2 size={18} className="text-emerald-400" />
-            <span className="font-bold text-sm">Note saved automatically</span>
-          </motion.div>
+      {/* ── RIGHT PANEL: Note Editor ───────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-[#0c0f12]">
+        {selectedNote ? (
+          <>
+            {/* Top Editor Toolbar */}
+            <div className="p-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 flex-wrap bg-slate-50/50 dark:bg-slate-900/30">
+              {/* Category picker & Tag indicator */}
+              <div className="flex items-center gap-2">
+                <select
+                  value={editCategory}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-none focus:outline-none focus:ring-1 focus:ring-[#b8ff4d]"
+                >
+                  {CATEGORIES.filter((c) => c !== "All").map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  onClick={() => handleTogglePin(selectedNote)}
+                  className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors ${
+                    selectedNote.isPinned
+                      ? "bg-[#b8ff4d]/10 text-[#b8ff4d]"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-white"
+                  }`}
+                  title={selectedNote.isPinned ? "Unpin Note" : "Pin to Top"}
+                >
+                  <Pin className="w-3.5 h-3.5 fill-current" />
+                  <span className="hidden sm:inline">{selectedNote.isPinned ? "Pinned" : "Pin"}</span>
+                </button>
+              </div>
+
+              {/* Formatting Toolbar */}
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700/60">
+                <button
+                  onClick={() => insertFormat("**", "**")}
+                  className="p-1 rounded text-slate-500 hover:text-white hover:bg-slate-700"
+                  title="Bold"
+                >
+                  <Bold className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => insertFormat("*", "*")}
+                  className="p-1 rounded text-slate-500 hover:text-white hover:bg-slate-700"
+                  title="Italic"
+                >
+                  <Italic className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => insertFormat("~~", "~~")}
+                  className="p-1 rounded text-slate-500 hover:text-white hover:bg-slate-700"
+                  title="Strikethrough"
+                >
+                  <Strikethrough className="w-3.5 h-3.5" />
+                </button>
+                <div className="w-px h-3.5 bg-slate-300 dark:bg-slate-700 mx-0.5" />
+                <button
+                  onClick={() => insertFormat("# ", "")}
+                  className="p-1 rounded text-slate-500 hover:text-white hover:bg-slate-700"
+                  title="Heading 1"
+                >
+                  <Heading1 className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => insertFormat("## ", "")}
+                  className="p-1 rounded text-slate-500 hover:text-white hover:bg-slate-700"
+                  title="Heading 2"
+                >
+                  <Heading2 className="w-3.5 h-3.5" />
+                </button>
+                <div className="w-px h-3.5 bg-slate-300 dark:bg-slate-700 mx-0.5" />
+                <button
+                  onClick={() => insertFormat("- ", "")}
+                  className="p-1 rounded text-slate-500 hover:text-white hover:bg-slate-700"
+                  title="Bullet List"
+                >
+                  <List className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => insertFormat("1. ", "")}
+                  className="p-1 rounded text-slate-500 hover:text-white hover:bg-slate-700"
+                  title="Numbered List"
+                >
+                  <ListOrdered className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => insertFormat("> ", "")}
+                  className="p-1 rounded text-slate-500 hover:text-white hover:bg-slate-700"
+                  title="Quote"
+                >
+                  <Quote className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => insertFormat("```\n", "\n```")}
+                  className="p-1 rounded text-slate-500 hover:text-white hover:bg-slate-700"
+                  title="Code Block"
+                >
+                  <Code className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Autosave Indicator & Delete */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                  {saveStatus === "saving" ? (
+                    <>
+                      <Clock className="w-3.5 h-3.5 text-amber-400 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : saveStatus === "saved" ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-[#b8ff4d]" />
+                      <span className="text-[#b8ff4d]">Saved {lastSavedAt}</span>
+                    </>
+                  ) : (
+                    <span>Last updated {new Date(selectedNote.updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => handleTrashNote(selectedNote)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                  title="Move to Trash"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Note Title Input */}
+            <div className="px-6 pt-6 pb-2">
+              <input
+                type="text"
+                value={editTitle}
+                onChange={(e) => handleTitleChange(e.target.value)}
+                placeholder="Note Title"
+                className="w-full text-2xl font-black text-slate-900 dark:text-white bg-transparent border-none focus:outline-none placeholder-slate-400"
+              />
+            </div>
+
+            {/* Tags Ribbon */}
+            <div className="px-6 py-2 flex items-center gap-1.5 flex-wrap border-b border-slate-100 dark:border-slate-800/40">
+              <Tag className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              {editTags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#b8ff4d]/10 text-[#b8ff4d]"
+                >
+                  #{tag}
+                  <button
+                    onClick={() => handleRemoveTag(tag)}
+                    className="hover:text-white"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+
+              <input
+                type="text"
+                value={newTagInput}
+                onChange={(e) => setNewTagInput(e.target.value)}
+                onKeyDown={handleAddTag}
+                placeholder="+ Add tag (Press Enter)"
+                className="text-xs bg-transparent text-slate-700 dark:text-slate-300 placeholder-slate-400 focus:outline-none w-36"
+              />
+            </div>
+
+            {/* Note Content Textarea */}
+            <div className="flex-1 p-6 overflow-y-auto">
+              <textarea
+                ref={textareaRef}
+                value={editContent}
+                onChange={(e) => handleContentChange(e.target.value)}
+                placeholder="Write your note in Markdown or plain text..."
+                className="w-full h-full resize-none bg-transparent text-slate-800 dark:text-slate-200 text-sm leading-relaxed focus:outline-none font-sans"
+              />
+            </div>
+          </>
+        ) : (
+          /* Empty Selection State */
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-400">
+            <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
+              <FileText className="w-8 h-8 opacity-40" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No note selected</h3>
+            <p className="text-xs max-w-sm mb-4">
+              Choose a note from the left sidebar or create a new one to start writing.
+            </p>
+            <button
+              onClick={handleCreateNote}
+              className="px-4 py-2 rounded-xl bg-[#b8ff4d] hover:bg-[#a6ec3c] text-black text-xs font-bold flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create Note</span>
+            </button>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 }

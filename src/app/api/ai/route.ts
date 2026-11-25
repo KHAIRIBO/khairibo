@@ -26,8 +26,8 @@ export async function POST(req: Request) {
         "education": "Khairi is currently a **Computer Science student**, constantly learning and adapting to new technologies.",
         "stack": "His favorite tech stack includes **Next.js 15, TypeScript, Supabase, and Tailwind CSS**.",
         "logo": "The KBO logo represents Khairi's commitment to quality and innovation in every line of code.",
-        "hello": "Hii! I'm KBO AI. I can tell you all about Khairi's skills, projects, and experience. What would you like to know?",
-        "hi": "Hii! I'm KBO AI. I can tell you all about Khairi's skills, projects, and experience. What would you like to know?"
+        "hello": "Hi! I'm KBO AI. I can tell you all about Khairi's skills, projects, and experience. What would you like to know?",
+        "hi": "Hi! I'm KBO AI. I can tell you all about Khairi's skills, projects, and experience. What would you like to know?"
       };
 
       // Simple keyword matching

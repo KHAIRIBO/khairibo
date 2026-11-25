@@ -1,0 +1,42 @@
+[
+  {
+    "token": "e8efba03ad1eaa404aefda85d97c6ec81dd781b7aed3bd3cc177df0e3310fee84ca553d6",
+    "createdAt": "2026-11-20T14:18:51.930Z",
+    "expiresAt": "2026-11-27T14:18:51.930Z",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.145.2 Chrome/150.0.7871.250 Electron/43.8.3 Safari/537.36",
+    "_id": "6b0056cb6663208f965ed94d"
+  },
+  {
+    "token": "d4a12b4da1abfd1b7e03d6ca85b3a3dcc8b31e5563d0b4a869939910006fbe573ba4339e",
+    "createdAt": "2026-11-20T14:16:39.861Z",
+    "expiresAt": "2026-11-27T14:16:39.861Z",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+    "_id": "6b0056476663208f965ed94b"
+  },
+  {
+    "token": "bdf03c709a1b530bacc7d20148e42bd3eb377c75167ba8ca7a1e23ed7fd8b5856a8f4a0f",
+    "createdAt": "2026-11-20T14:14:04.338Z",
+    "expiresAt": "2026-11-27T14:14:04.338Z",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-GB) WindowsPowerShell/5.1.26100.9818",
+    "_id": "6b0055ac6663208f965ed949"
+  },
+  {
+    "token": "076d4880121f7d25bd36f974d7e54b894db9150e9366e6d3c65329cf2ec3f9802b4141b4",
+    "createdAt": "2026-11-20T14:07:48.832Z",
+    "expiresAt": "2026-11-27T14:07:48.832Z",
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-GB) WindowsPowerShell/5.1.26100.9818",
+    "_id": "6b0054346663208f965ed947"
+  },
+  {
+    "token": "6ed1c4213b8f741f207078b4c41718b46a7a14a5b94a3c6eca1a1b3f317aa2ad6abd771a",
+    "createdAt": "2026-11-11T12:31:45.997Z",
+    "expiresAt": "2026-11-18T12:31:45.997Z",
+    "ip": "::1",
+    "userAgent": "node",
+    "_id": "6af460310c7731c83bb3c2cb"
+  }
+]
